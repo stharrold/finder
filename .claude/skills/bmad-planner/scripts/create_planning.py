@@ -31,6 +31,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 # Constants with documented rationale
 TIMESTAMP_FORMAT = "%Y-%m-%d"  # Human-readable date for documentation
@@ -102,7 +103,7 @@ def run_command(cmd: list[str], capture=True, check=True) -> str | None:
         error_exit(f"Command not found: {cmd[0]}")
 
 
-def detect_context() -> dict[str, any]:
+def detect_context() -> dict[str, Any]:
     """Detect current repository context and validate for BMAD planning."""
 
     # Get repository root
@@ -224,7 +225,7 @@ def ask_yes_no(prompt: str, default: bool = True, config_key: str | None = None)
     return response in ["y", "yes"]
 
 
-def interactive_qa_analyst() -> dict[str, any]:
+def interactive_qa_analyst() -> dict[str, Any]:
     """Conduct BMAD Analyst persona Q&A for requirements gathering."""
     global _CONFIG_PATH
 
@@ -348,7 +349,7 @@ def interactive_qa_analyst() -> dict[str, any]:
     return data
 
 
-def interactive_qa_architect(requirements_data: dict[str, any]) -> dict[str, any]:
+def interactive_qa_architect(requirements_data: dict[str, Any]) -> dict[str, Any]:
     """Conduct BMAD Architect persona Q&A for architecture design."""
     global _CONFIG_PATH
 
@@ -488,7 +489,7 @@ def interactive_qa_architect(requirements_data: dict[str, any]) -> dict[str, any
     return data
 
 
-def generate_epic_breakdown(requirements_data: dict[str, any], architecture_data: dict[str, any]) -> list[dict[str, any]]:
+def generate_epic_breakdown(requirements_data: dict[str, Any], architecture_data: dict[str, Any]) -> list[dict[str, Any]]:
     """Generate BMAD PM epic breakdown automatically based on requirements and architecture."""
 
     print("\n" + "=" * 70)
@@ -607,7 +608,7 @@ def generate_epic_breakdown(requirements_data: dict[str, any], architecture_data
     return epics
 
 
-def process_requirements_template(template_path: Path, analyst_data: dict[str, any], slug: str, gh_user: str) -> str:
+def process_requirements_template(template_path: Path, analyst_data: dict[str, Any], slug: str, gh_user: str) -> str:
     """Process requirements.md template with analyst data."""
 
     template = template_path.read_text()
@@ -647,7 +648,7 @@ def process_requirements_template(template_path: Path, analyst_data: dict[str, a
     return content
 
 
-def process_architecture_template(template_path: Path, architect_data: dict[str, any], slug: str, gh_user: str) -> str:
+def process_architecture_template(template_path: Path, architect_data: dict[str, Any], slug: str, gh_user: str) -> str:
     """Process architecture.md template with architect data."""
 
     template = template_path.read_text()
@@ -694,7 +695,7 @@ def process_architecture_template(template_path: Path, architect_data: dict[str,
     return content
 
 
-def process_epics_template(template_path: Path, epics: list[dict[str, any]], slug: str, gh_user: str) -> str:
+def process_epics_template(template_path: Path, epics: list[dict[str, Any]], slug: str, gh_user: str) -> str:
     """Process epics.md template with generated epic data."""
 
     template = template_path.read_text()
