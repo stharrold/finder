@@ -1,7 +1,7 @@
 ---
 type: claude-context
 directory: .
-purpose: Data organization repository for cataloging jewelry items
+purpose: Ring search automation for locating lost antique ring across marketplaces
 parent: null
 sibling_readme: README.md
 children: []
@@ -13,9 +13,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This is a data organization repository for cataloging jewelry items (primarily rings from Brilliant Earth). It stores product information, images, and order documentation.
+Automated daily search across online marketplaces (ShopGoodwill, eBay, Etsy, Craigslist) to locate a lost antique ring. Captures screenshots of promising matches, maintains deduplicated URL tracking, and generates daily summary reports.
 
-## Directory Structure
+## Development Commands
+
+```bash
+# Install dependencies
+uv sync
+uv run playwright install chromium
+
+# Run CLI
+uv run ring-search run --config config.yaml        # Daily search
+uv run ring-search check-urls urls.txt --config config.yaml  # Check specific URLs
+uv run ring-search report                          # View most recent summary
+
+# Testing
+uv run pytest                    # Run all tests
+uv run pytest tests/test_scoring.py  # Run single test file
+uv run pytest -k "test_high"     # Run tests matching pattern
+uv run pytest --cov=src          # With coverage
+
+# Linting and type checking
+uv run ruff check src/           # Lint
+uv run ruff format src/          # Format
+uv run mypy src/                 # Type check
+```
+
+## Architecture
+
+```
+SearchOrchestrator (src/ring_search.py)
+├── MarketplaceAdapter (src/adapters/base.py) - Abstract interface
+│   ├── ShopGoodwillAdapter
+│   ├── EbayAdapter
+│   ├── EtsyAdapter
+│   └── CraigslistAdapter
+├── RelevanceScorer (src/scoring.py) - Configurable weights for ring attributes
+├── ScreenshotCapture (src/capture.py) - Full-page screenshots via Playwright
+├── DedupManager (src/dedup.py) - Persistent URL tracking
+└── SearchLogger (src/logger.py) - JSON logs and markdown summaries
+```
+
+**Adding a new marketplace**: Subclass `MarketplaceAdapter`, implement `search()` and `get_listing_details()`, add to `ADAPTER_MAP` in `SearchOrchestrator`.
+
+## Data Directory Structure
 
 ```
 finder/
@@ -24,19 +65,13 @@ finder/
     └── output/   # Processed/generated files
 ```
 
-## Naming Conventions
+### Naming Conventions
 
-### Item Folders
-Format: `YYYYMMDD_type_description`
-- `YYYYMMDD`: Target or reference date
-- `type`: Item category (e.g., `ring`)
-- `description`: Hyphenated descriptors (e.g., `vintage-amethyst-pearl-gold`)
+**Item folders**: `YYYYMMDD_type_description` (e.g., `20251201_ring_vintage-amethyst-pearl-gold`)
 
-Example: `20251201_ring_vintage-amethyst-pearl-gold`
-
-### Input Files
-- Product PDFs: Full product page title from source (e.g., `Art Nouveau Amethyst Vintage Ring _ Giulia _ Brilliant Earth.pdf`)
-- Product images: `ProductName_view.ext` where view is `top`, `side`, `hand_zi` (hand zoomed in), `hand_zo` (hand zoomed out)
+**Input files**:
+- Product PDFs: Full product page title from source
+- Product images: `ProductName_view.ext` where view is `top`, `side`, `hand_zi`, `hand_zo`
 - Order confirmations: `YYYYMMDD_source - subject.pdf`
 
 ## Branch Structure
