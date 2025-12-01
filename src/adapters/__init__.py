@@ -1,0 +1,15 @@
+"""Marketplace adapters for ring search automation."""
+
+from src.adapters.base import MarketplaceAdapter
+from src.adapters.craigslist import CraigslistAdapter
+from src.adapters.ebay import EbayAdapter
+from src.adapters.etsy import EtsyAdapter
+from src.adapters.shopgoodwill import ShopGoodwillAdapter
+
+__all__ = [
+    "MarketplaceAdapter",
+    "ShopGoodwillAdapter",
+    "EbayAdapter",
+    "EtsyAdapter",
+    "CraigslistAdapter",
+]
