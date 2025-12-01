@@ -964,7 +964,10 @@ def main():
     parser.add_argument(
         "--config",
         type=Path,
-        help="Path to YAML/JSON config file for non-interactive mode. " "Config should have sections: analyst (requirements), architect (architecture).",
+        help=(
+            "Path to YAML/JSON config file for non-interactive mode. "
+            "Config should have sections: analyst (requirements), architect (architecture)."
+        ),
     )
 
     args = parser.parse_args()

@@ -424,7 +424,11 @@ def run_full_workflow():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PR Workflow Enforcement", formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
+    parser = argparse.ArgumentParser(
+        description="PR Workflow Enforcement",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
     parser.add_argument("step", choices=["finish-feature", "archive-todo", "sync-agents", "start-develop", "full", "status"], help="Workflow step to execute")
 
     args = parser.parse_args()

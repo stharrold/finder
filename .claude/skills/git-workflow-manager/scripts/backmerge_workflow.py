@@ -419,7 +419,11 @@ def run_full_workflow(version: str | None = None) -> bool:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Backmerge Workflow", formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
+    parser = argparse.ArgumentParser(
+        description="Backmerge Workflow",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
     parser.add_argument("step", choices=["pr-develop", "rebase-contrib", "cleanup-release", "full", "status"], help="Workflow step to execute")
     parser.add_argument("--version", help="Version for release (e.g., v1.6.0). Auto-detected from tags if not provided.")
 
