@@ -32,8 +32,13 @@ def run_search(args: argparse.Namespace) -> int:
     Returns:
         Exit code (0 for success, 1 for failure).
     """
+    config_path = Path(args.config)
+    if not config_path.exists():
+        print(f"Error: Config file not found: {config_path}", file=sys.stderr)
+        return 1
+
     try:
-        orchestrator = SearchOrchestrator(Path(args.config))
+        orchestrator = SearchOrchestrator(config_path)
         stats = asyncio.run(orchestrator.run_daily_search(headless=not args.headed))
 
         print("\n" + "=" * 50)
@@ -68,6 +73,11 @@ def check_urls(args: argparse.Namespace) -> int:
     Returns:
         Exit code.
     """
+    config_path = Path(args.config)
+    if not config_path.exists():
+        print(f"Error: Config file not found: {config_path}", file=sys.stderr)
+        return 1
+
     try:
         # Read URLs from file
         urls_path = Path(args.urls_file)
@@ -83,9 +93,18 @@ def check_urls(args: argparse.Namespace) -> int:
             print("No URLs found in file", file=sys.stderr)
             return 1
 
+        # Validate URL format
+        invalid_urls = [url for url in urls if not url.startswith(("http://", "https://"))]
+        if invalid_urls:
+            print(f"Warning: {len(invalid_urls)} URLs don't start with http(s)://", file=sys.stderr)
+            for url in invalid_urls[:3]:
+                print(f"  - {url}", file=sys.stderr)
+            if len(invalid_urls) > 3:
+                print(f"  ... and {len(invalid_urls) - 3} more", file=sys.stderr)
+
         print(f"Checking {len(urls)} URLs...")
 
-        orchestrator = SearchOrchestrator(Path(args.config))
+        orchestrator = SearchOrchestrator(config_path)
         stats = asyncio.run(orchestrator.check_specific_urls(urls, headless=not args.headed))
 
         print("\n" + "=" * 50)
@@ -113,8 +132,13 @@ def show_report(args: argparse.Namespace) -> int:
     Returns:
         Exit code.
     """
+    config_path = Path(args.config)
+    if not config_path.exists():
+        print(f"Error: Config file not found: {config_path}", file=sys.stderr)
+        return 1
+
     try:
-        orchestrator = SearchOrchestrator(Path(args.config))
+        orchestrator = SearchOrchestrator(config_path)
 
         # Find summary file
         output_dir = Path(orchestrator.config.get("output", {}).get("base_dir", "output"))
