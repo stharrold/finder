@@ -1,0 +1,90 @@
+# Ring Search Automation Configuration
+
+# Target ring details for reference
+target_ring:
+  name: "The Giulia Ring"
+  style_number: "BSB96044"
+  metal: "10K Yellow Gold"
+  stones:
+    - "Amethyst"
+    - "Seed Pearls"
+  size: 7
+  lost_location: "Indianapolis, IN - Goodwill"
+  lost_date: "2025-10"
+
+# Marketplaces to search
+marketplaces:
+  - name: shopgoodwill
+    enabled: true
+    priority: 1  # Highest priority (lost near Goodwill)
+    searches:
+      - "amethyst pearl ring"
+      - "vintage gold ring amethyst"
+      - "antique amethyst pearl ring"
+
+  - name: ebay
+    enabled: true
+    priority: 2
+    searches:
+      - "amethyst pearl ring vintage gold"
+      - "antique amethyst pearl ring 10k"
+      - "Victorian amethyst seed pearl ring"
+
+  - name: etsy
+    enabled: true
+    priority: 3
+    searches:
+      - "amethyst pearl gold vintage ring"
+      - "antique amethyst pearl ring"
+
+  - name: craigslist
+    enabled: true
+    priority: 4
+    regions:
+      - indianapolis
+      - bloomington
+      - fortwayne
+      - louisville
+      - cincinnati
+    searches:
+      - "amethyst ring"
+      - "pearl ring gold"
+
+# Known leads to check first
+known_leads:
+  - url: "https://www.etsy.com/uk/listing/1895838715/"
+    note: "Etsy UK potential match"
+  - url: "https://pittsburgh.craigslist.org/jwl/d/new-fancy-10k-gold-amethyst-ring/7893523856.html"
+    note: "Pittsburgh Craigslist"
+  - url: "https://www.ebay.com/itm/397177063712"
+    note: "eBay listing"
+
+# Scoring configuration
+scoring:
+  thresholds:
+    high: 70
+    medium: 40
+  weights:
+    metal_yellow_gold: 20
+    metal_10k: 10
+    stone_amethyst: 25
+    stone_purple: 15
+    pearl_seed: 20
+    pearl_any: 10
+    design_swirl: 15
+    design_floral: 5
+    era_victorian: 10
+    size_exact: 10
+    size_close: 5
+
+# Rate limiting
+rate_limiting:
+  min_delay_seconds: 2
+  max_delay_seconds: 5
+
+# Output configuration
+output:
+  base_dir: "output"
+  screenshot_format: "png"
+  logs_dir: "logs"
+  screenshots_dir: "screenshots"
