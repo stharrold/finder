@@ -19,12 +19,13 @@ Automated daily search across online marketplaces (ShopGoodwill, eBay, Etsy, Cra
 
 ```bash
 # Install dependencies
-uv sync
+uv sync --extra dev
 uv run playwright install chromium
 
-# Run CLI
-uv run ring-search run --config config.yaml        # Daily search
-uv run ring-search check-urls urls.txt --config config.yaml  # Check specific URLs
+# Run CLI (note: global options before subcommand)
+uv run ring-search -c config.yaml run              # Daily search
+uv run ring-search -c config.yaml run --headed     # With visible browser
+uv run ring-search -c config.yaml check-urls urls.txt  # Check specific URLs
 uv run ring-search report                          # View most recent summary
 
 # Testing
@@ -44,17 +45,15 @@ uv run mypy src/                 # Type check
 ```
 SearchOrchestrator (src/ring_search.py)
 ├── MarketplaceAdapter (src/adapters/base.py) - Abstract interface
-│   ├── ShopGoodwillAdapter
-│   ├── EbayAdapter
-│   ├── EtsyAdapter
-│   └── CraigslistAdapter
+│   ├── ShopGoodwillAdapter, EbayAdapter, EtsyAdapter, CraigslistAdapter
+│   ├── RubyLaneAdapter, MercariAdapter, PoshmarkAdapter
 ├── RelevanceScorer (src/scoring.py) - Configurable weights for ring attributes
 ├── ScreenshotCapture (src/capture.py) - Full-page screenshots via Playwright
 ├── DedupManager (src/dedup.py) - Persistent URL tracking
 └── SearchLogger (src/logger.py) - JSON logs and markdown summaries
 ```
 
-**Adding a new marketplace**: Subclass `MarketplaceAdapter`, implement `search()` and `get_listing_details()`, add to `ADAPTER_MAP` in `SearchOrchestrator`.
+**Adding a new marketplace**: Subclass `MarketplaceAdapter`, implement `search()` and `get_listing_details()`, register in `src/adapters/__init__.py` and add to `ADAPTER_MAP` in `SearchOrchestrator`.
 
 ## Data Directory Structure
 
