@@ -1,19 +1,16 @@
----
-type: claude-context
-directory: .
-purpose: Ring search automation for locating lost antique ring across marketplaces
-parent: null
-sibling_readme: README.md
-children: []
----
-
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Repository Purpose
 
-Automated daily search across online marketplaces (ShopGoodwill, eBay, Etsy, Craigslist) to locate a lost antique ring. Captures screenshots of promising matches, maintains deduplicated URL tracking, and generates daily summary reports.
+Automated daily search across online marketplaces to locate a lost antique ring ("The Giulia Ring" - 10K yellow gold with amethyst and seed pearls, size 7, lost in Indianapolis).
+
+**Search Coverage**:
+- **Fixed Adapters**: ShopGoodwill, eBay, Etsy, Craigslist (24 regions/300mi), Ruby Lane, Mercari, Poshmark
+- **Adaptive Discovery**: Any marketplace via DuckDuckGo + Facebook Marketplace, OfferUp, Nextdoor
+
+**Configuration**: Edit `config.yaml` to customize search keywords, scoring weights, marketplace priorities, and discovery settings.
 
 ## Development Commands
 
@@ -25,6 +22,7 @@ uv run playwright install chromium
 # Run CLI (note: global options before subcommand)
 uv run ring-search -c config.yaml run              # Daily search
 uv run ring-search -c config.yaml run --headed     # With visible browser
+uv run ring-search -c config.yaml run --adaptive   # With adaptive discovery
 uv run ring-search -c config.yaml check-urls urls.txt  # Check specific URLs
 uv run ring-search report                          # View most recent summary
 
@@ -47,13 +45,22 @@ SearchOrchestrator (src/ring_search.py)
 ├── MarketplaceAdapter (src/adapters/base.py) - Abstract interface
 │   ├── ShopGoodwillAdapter, EbayAdapter, EtsyAdapter, CraigslistAdapter
 │   ├── RubyLaneAdapter, MercariAdapter, PoshmarkAdapter
+├── SearchDiscovery (src/discovery/base.py) - Search engine discovery [NEW]
+│   ├── GoogleDiscovery, DuckDuckGoDiscovery
+│   └── MarketplaceFilter - URL filtering and prioritization
+├── AdaptiveExtractor (src/extractors/base.py) - Universal listing extraction [NEW]
+│   ├── StructuredDataExtractor - JSON-LD, OpenGraph, microdata
+│   ├── LegacyAdapterBridge - Routes to existing adapters
+│   └── GenericListingExtractor - Heuristic fallback
 ├── RelevanceScorer (src/scoring.py) - Configurable weights for ring attributes
 ├── ScreenshotCapture (src/capture.py) - Full-page screenshots via Playwright
 ├── DedupManager (src/dedup.py) - Persistent URL tracking
 └── SearchLogger (src/logger.py) - JSON logs and markdown summaries
 ```
 
-**Adding a new marketplace**: Subclass `MarketplaceAdapter`, implement `search()` and `get_listing_details()`, register in `src/adapters/__init__.py` and add to `ADAPTER_MAP` in `SearchOrchestrator`.
+**Adding a new marketplace**: Subclass `MarketplaceAdapter`, implement `search()` and `get_listing_details()`, register in `src/adapters/__init__.py` and add to `ADAPTER_MAP`.
+
+**Adaptive mode**: Enable with `--adaptive` flag or set `discovery.enabled: true` in config.yaml. Discovers listings via search engines and extracts data using structured markup or heuristics.
 
 ## Data Directory Structure
 
@@ -95,6 +102,13 @@ contrib/<gh-user>             ← Personal contribution branch
 ### PR Flow
 
 All changes flow: `contrib/<user>` → `develop` → `main`
+
+## Scheduled Automation
+
+Daily search runs at 8:00 AM via macOS LaunchAgent:
+- **Plist**: `~/Library/LaunchAgents/com.stharrold.ring-search.plist`
+- **Logs**: `output/logs/launchd.log`
+- **Manual trigger**: `launchctl kickstart gui/$(id -u)/com.stharrold.ring-search`
 
 ## Critical Guidelines
 

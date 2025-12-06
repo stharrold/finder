@@ -485,7 +485,7 @@ class TestCLIIntegration:
             result = run_search(args)
 
         assert result == 0
-        mock_orch.assert_called_once_with(e2e_config)
+        mock_orch.assert_called_once_with(e2e_config, adaptive=False)
 
     def test_cli_handles_orchestrator_error(self, e2e_config: Path) -> None:
         """Test that CLI handles orchestrator errors gracefully."""
