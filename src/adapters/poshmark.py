@@ -198,8 +198,9 @@ class PoshmarkAdapter(MarketplaceAdapter):
 
             except PlaywrightTimeout as e:
                 last_error = e
+                # Only sleep and retry if not on the final attempt
                 if attempt < MAX_RETRIES - 1:
-                    delay = RETRY_BASE_DELAY * (2**attempt)
+                    delay = RETRY_BASE_DELAY * (2**attempt)  # Exponential backoff: 1s, 2s, 4s
                     logger.warning(
                         f"Timeout fetching Poshmark details (attempt {attempt + 1}/{MAX_RETRIES}), "
                         f"retrying in {delay:.1f}s: {url}"

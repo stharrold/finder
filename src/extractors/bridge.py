@@ -87,8 +87,8 @@ class LegacyAdapterBridge(ListingExtractor):
                 adapter_class = ADAPTER_MAP[name]
                 self._adapters[name] = adapter_class()
                 return self._adapters[name]
-        except ImportError:
-            logger.warning(f"Could not import adapter: {name}")
+        except ImportError as e:
+            logger.warning(f"Could not import adapter {name}: {e}")
 
         return None
 

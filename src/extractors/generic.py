@@ -139,8 +139,7 @@ class GenericListingExtractor(ListingExtractor):
                     '.gallery img',
                     'main img[src*="product"]',
                     'main img[src*="item"]',
-                    'img[alt*="product"]',
-                    'img[alt*="ring"]'
+                    'img[alt*="product"]'
                 ];
 
                 for (const selector of imageSelectors) {

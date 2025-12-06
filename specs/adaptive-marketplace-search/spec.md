@@ -7,7 +7,7 @@
 
 ## Overview
 
-[One paragraph describing what this feature does and why it's needed]
+The Adaptive Marketplace Search feature replaces the fixed list of marketplace adapters with a dynamic discovery system that uses search engines (Google/DuckDuckGo) to find listings across any online marketplace. This enables the ring search tool to discover potential matches on platforms like Facebook Marketplace, OfferUp, and other sites without requiring dedicated adapters for each one. The feature also fixes the Poshmark adapter's DOM context errors and adds a generic extractor that uses structured data (JSON-LD, OpenGraph) to extract listing details from any webpage.
 
 
 ## Implementation Context

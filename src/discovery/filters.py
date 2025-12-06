@@ -238,8 +238,9 @@ class MarketplaceFilter:
             if mp.name in target_mps:
                 # Extract base domain from first pattern
                 pattern = mp.domain_patterns[0]
-                # Convert regex pattern to domain
-                domain = pattern.replace(r"\.", ".").split("(")[0]
+                # Convert regex pattern to domain (extract first domain before special chars)
+                domain = re.sub(r'\\\.', '.', pattern.split('(')[0])
+                domain = re.sub(r'[^a-z0-9.]', '', domain)
                 if domain:
                     filters.append(f"site:{domain}")
 

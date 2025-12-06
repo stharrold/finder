@@ -182,8 +182,11 @@ class StructuredDataExtractor(ListingExtractor):
             if isinstance(offers, dict):
                 price = offers.get("price")
                 if price:
-                    currency = offers.get("priceCurrency", "$")
-                    price = f"{currency}{price}"
+                    # Map ISO 4217 currency codes to symbols
+                    currency_symbols = {"USD": "$", "EUR": "€", "GBP": "£", "CAD": "C$", "AUD": "A$"}
+                    currency_code = offers.get("priceCurrency", "USD")
+                    symbol = currency_symbols.get(currency_code, currency_code)
+                    price = f"{symbol}{price}"
 
             # Direct price
             if not price and product.get("price"):
@@ -228,8 +231,11 @@ class StructuredDataExtractor(ListingExtractor):
             # Try to get price from product:price:amount
             price = og_data.get("product_price:amount")
             if price:
-                currency = og_data.get("product_price:currency", "$")
-                price = f"{currency}{price}"
+                # Map ISO 4217 currency codes to symbols
+                currency_symbols = {"USD": "$", "EUR": "€", "GBP": "£", "CAD": "C$", "AUD": "A$"}
+                currency_code = og_data.get("product_price:currency", "USD")
+                symbol = currency_symbols.get(currency_code, currency_code)
+                price = f"{symbol}{price}"
 
             if title:
                 return ExtractedListing(

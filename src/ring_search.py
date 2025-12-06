@@ -261,6 +261,7 @@ class SearchOrchestrator:
         for result in discovered_urls:
             try:
                 await page.goto(result.url, wait_until="domcontentloaded")
+                await page.wait_for_timeout(1000)  # Give JS time to render
 
                 # Use adaptive extractor
                 extracted = await self.extractor.extract(page, result.url)
@@ -268,6 +269,7 @@ class SearchOrchestrator:
                 if extracted:
                     listing = extracted.to_listing()
                     await self._process_listing(page, listing)
+                    # Only mark as checked after successful processing
                     self.dedup.mark_checked(result.url)
                 else:
                     # Fallback to basic extraction
@@ -280,9 +282,11 @@ class SearchOrchestrator:
                         image_url=None,
                     )
                     await self._process_listing(page, listing)
+                    # Only mark as checked after successful processing
                     self.dedup.mark_checked(result.url)
 
             except Exception as e:
+                # Don't mark failed URLs as checked - they can be retried next run
                 logger.warning(f"Error processing discovered URL {result.url}: {e}")
 
     async def _check_known_leads(self, page: Page) -> None:

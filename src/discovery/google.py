@@ -18,6 +18,11 @@ class GoogleDiscovery(SearchDiscovery):
 
     Uses browser-based search to avoid API costs and access real-time results.
     Implements rate limiting to respect Google's terms of service.
+
+    WARNING: Automated scraping of Google Search results may violate Google's
+    Terms of Service. For production or ToS-compliant use, consider using the
+    official Google Custom Search JSON API instead:
+    https://developers.google.com/custom-search/v1/overview
     """
 
     NAME = "google"

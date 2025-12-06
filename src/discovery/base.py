@@ -91,10 +91,11 @@ class SearchDiscovery(ABC):
             Deduplicated DiscoveryResult objects.
         """
         seen_urls: set[str] = set()
-        filters: list[str | None] = site_filters if site_filters else [None]
+        # List of site filter strings (e.g., ["site:ebay.com"]) or [None] for no filter
+        site_filter_list: list[str | None] = site_filters if site_filters else [None]
 
         for query in queries:
-            for site_filter in filters:
+            for site_filter in site_filter_list:
                 try:
                     async for result in self.search(page, query, site_filter):
                         # Deduplicate by URL

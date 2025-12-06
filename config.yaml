@@ -104,8 +104,9 @@ rate_limiting:
   min_delay_seconds: 2
   max_delay_seconds: 5
 
-# Adaptive search discovery (optional - enhances standard marketplace searches)
-# When enabled, uses search engines to discover listings on any marketplace
+# Adaptive search discovery uses search engines (Google/DuckDuckGo) to find marketplace
+# listings beyond the configured marketplace adapters. This enables discovery of listings
+# on any marketplace, including those not directly supported (e.g., Facebook, OfferUp, etc.).
 discovery:
   enabled: false  # Set to true to enable adaptive search
   providers:

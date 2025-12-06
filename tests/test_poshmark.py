@@ -6,6 +6,7 @@ Tests the batch JavaScript extraction and retry logic.
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from playwright.async_api import TimeoutError as PlaywrightTimeout
 
 from src.adapters.poshmark import MAX_RETRIES, PoshmarkAdapter
 
@@ -154,8 +155,6 @@ class TestPoshmarkRetryLogic:
         mock_page = AsyncMock()
         mock_page.wait_for_timeout = AsyncMock()
 
-        from playwright.async_api import TimeoutError as PlaywrightTimeout
-
         # Fail twice, succeed on third attempt
         call_count = 0
 
@@ -189,8 +188,6 @@ class TestPoshmarkRetryLogic:
 
         mock_page = AsyncMock()
 
-        from playwright.async_api import TimeoutError as PlaywrightTimeout
-
         # Always fail
         mock_page.goto = AsyncMock(side_effect=PlaywrightTimeout("Timeout"))
 
@@ -206,8 +203,6 @@ class TestPoshmarkRetryLogic:
         adapter = PoshmarkAdapter(min_delay=0.01, max_delay=0.02)
 
         mock_page = AsyncMock()
-
-        from playwright.async_api import TimeoutError as PlaywrightTimeout
 
         mock_page.goto = AsyncMock(side_effect=PlaywrightTimeout("Timeout"))
 
