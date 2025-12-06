@@ -83,6 +83,24 @@ BikeSearchOrchestrator (src/bike_search.py)    # Bike search orchestrator
 - Range extender: 15%
 - Large frame: 5%
 
+**Orchestrator selection**: The CLI uses `create_orchestrator()` in `src/bike_search.py` which auto-detects whether to use `SearchOrchestrator` (ring) or `BikeSearchOrchestrator` (bike) based on `search_type` in the config file.
+
+## Workflow Commands
+
+Feature development follows a 7-step workflow via slash commands:
+
+```
+/workflow:1_specify  → Create feature spec and worktree
+/workflow:2_plan     → Generate design artifacts
+/workflow:3_tasks    → Generate task list
+/workflow:4_implement → Execute tasks automatically
+/workflow:5_integrate → PR to contrib, cleanup, PR to develop
+/workflow:6_release   → Release to production (develop → main)
+/workflow:7_backmerge → Sync release to develop and contrib
+```
+
+Run `/workflow:all` to orchestrate the full workflow with manual gate pauses.
+
 ## Data Directory Structure
 
 ```

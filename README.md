@@ -1,11 +1,17 @@
-# Finder - Ring Search Automation
+# Finder - Marketplace Search Automation
 
-Automated daily search across online marketplaces to locate a lost antique ring. Captures screenshots of promising matches, maintains a deduplicated log of all checked listings, and generates daily summary reports.
+Automated daily search across online marketplaces to locate specific items. Supports multiple search profiles with configurable scoring, captures screenshots of promising matches, and generates daily summary reports.
+
+## Search Profiles
+
+- **Ring Search** (`config.yaml`): Lost antique ring - 10K yellow gold with amethyst and seed pearls
+- **Bike Search** (`bike_config.yaml`): Trek Allant+ 7S e-bike - Class 3, 625Wh battery, range extender, Large frame
 
 ## Features
 
-- **Multi-Marketplace Search**: ShopGoodwill, eBay, Etsy, Craigslist
-- **Relevance Scoring**: Configurable weights for metal, stone, pearl, design, era, size
+- **Multi-Marketplace Search**: ShopGoodwill, eBay, Etsy, Craigslist, Poshmark, Mercari, Ruby Lane, Pinkbike, Trek Red Barn
+- **Adaptive Discovery**: Search engine discovery via DuckDuckGo for any marketplace
+- **Relevance Scoring**: Configurable weights per search profile
 - **Screenshot Capture**: Full-page screenshots of promising matches
 - **Deduplication**: Persistent URL tracking to avoid rechecking listings
 - **Daily Reports**: Markdown summaries with match statistics
@@ -25,22 +31,25 @@ uv run playwright install chromium
 ## Usage
 
 ```bash
-# Run daily search across all marketplaces
-uv run ring-search run --config config.yaml
+# Ring search
+uv run ring-search -c config.yaml run
+uv run ring-search -c config.yaml run --headed     # Visible browser
+uv run ring-search -c config.yaml run --adaptive   # With adaptive discovery
 
-# Check specific URLs from a file
-uv run ring-search check-urls urls.txt --config config.yaml
+# Bike search (Trek Allant+ 7S)
+uv run ring-search -c bike_config.yaml run
+uv run ring-search -c bike_config.yaml run --headed
+
+# Check specific URLs
+uv run ring-search -c config.yaml check-urls urls.txt
 
 # View most recent daily summary
 uv run ring-search report
-
-# Run with visible browser (for debugging)
-uv run ring-search run --headed
 ```
 
 ## Configuration
 
-Edit `config.yaml` to customize:
+Edit `config.yaml` (ring) or `bike_config.yaml` (bike) to customize:
 - Marketplace priorities and search keywords
 - Scoring weights for relevance calculation
 - Output directories and rate limiting
