@@ -26,7 +26,7 @@ class TestCLI:
             assert exc.value.code == 0
 
         captured = capsys.readouterr()
-        assert "Ring Search Automation" in captured.out
+        assert "Marketplace Search Automation" in captured.out
         assert "run" in captured.out
         assert "check-urls" in captured.out
 

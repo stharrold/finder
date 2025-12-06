@@ -7,8 +7,7 @@
 
 ## Overview
 
-[One paragraph describing what this feature does and why it's needed]
-
+This feature extends the existing marketplace search automation to efficiently locate Trek Allant+ 7S electric bikes across multiple online marketplaces. It leverages bike-specific scoring criteria to identify, rank, and report relevant listings, ensuring users can quickly find the best available options matching strict requirements (Class 3, 625Wh battery, range extender, Large frame).
 
 ## Implementation Context
 
@@ -29,282 +28,270 @@ See: `planning/bike-search/requirements.md` in main repository
 
 ## Detailed Specification
 
-### Component 1: [Component Name]
+### Component 1: BikeRelevanceScorer
 
-**File:** `src/path/to/file.py`
+**File:** `src/bike_scoring.py`
 
-**Purpose:** [What does this component do?]
+**Purpose:** Scores listings based on Trek Allant+ 7S match criteria with configurable weights.
 
 **Implementation:**
 
 ```python
-# Example code structure
+class BikeRelevanceScorer:
+    """Scores listings based on match criteria for Trek Allant+ 7S."""
 
-class ExampleClass:
-    """Brief description of class purpose."""
+    THRESHOLDS = {"high": 70, "medium": 40}
 
-    def __init__(self, param1: str, param2: int):
-        """Initialize with parameters."""
-        self.param1 = param1
-        self.param2 = param2
+    def __init__(self, weights: BikeScoringWeights | None = None):
+        self.weights = weights or BikeScoringWeights()
 
-    def method_name(self, arg: str) -> dict:
-        """
-        Description of what this method does.
+    def score(self, listing: Listing) -> ScoredListing:
+        """Score a listing based on Trek Allant+ 7S match criteria."""
+        # Analyzes: model, class, battery, range extender, frame size
+        pass
+```
 
-        Args:
-            arg: Description of argument
+**Scoring Weights:**
+- `model_allant_7s`: 40 (exact model match)
+- `model_allant_7_penalty`: -30 (wrong model - Class 1)
+- `class_3`: 20 (28 mph confirmed)
+- `class_1_penalty`: -25 (20 mph - reject)
+- `battery_625wh`: 20 (required capacity)
+- `battery_500wh_penalty`: -15 (insufficient)
+- `range_extender`: 15 (second battery)
+- `frame_large`: 5 (correct size)
 
-        Returns:
-            Dictionary with result data
+**Dependencies:**
+- `src/models.py` (BikeScoringWeights, Listing, ScoredListing)
 
-        Raises:
-            ValueError: When input is invalid
-        """
-        # Implementation details
+### Component 2: BikeSearchOrchestrator
+
+**File:** `src/bike_search.py`
+
+**Purpose:** Coordinates bike search across marketplaces with bike-specific configuration.
+
+**Implementation:**
+
+```python
+class BikeSearchOrchestrator(SearchOrchestrator):
+    """Orchestrator specialized for Trek Allant+ 7S searches."""
+
+    def __init__(self, config: dict, headed: bool = False):
+        super().__init__(config, headed)
+        self.scorer = BikeRelevanceScorer(
+            weights=BikeScoringWeights(**config.get("scoring", {}).get("weights", {}))
+        )
+
+
+def create_orchestrator(config: dict, headed: bool = False) -> SearchOrchestrator:
+    """Factory function to create appropriate orchestrator based on config."""
+    if "bike" in config.get("search_type", "ring").lower():
+        return BikeSearchOrchestrator(config, headed)
+    return SearchOrchestrator(config, headed)
+```
+
+**Dependencies:**
+- `src/ring_search.py` (SearchOrchestrator base class)
+- `src/bike_scoring.py` (BikeRelevanceScorer)
+
+### Component 3: PinkbikeAdapter
+
+**File:** `src/adapters/pinkbike.py`
+
+**Purpose:** Searches Pinkbike Buy/Sell for e-bike listings.
+
+**Implementation:**
+
+```python
+class PinkbikeAdapter(MarketplaceAdapter):
+    """Adapter for Pinkbike marketplace."""
+
+    BASE_URL = "https://www.pinkbike.com/buysell/list/"
+
+    async def search(self, query: str, location: str | None = None) -> list[str]:
+        """Search Pinkbike for e-bike listings."""
+        pass
+
+    async def get_listing_details(self, url: str) -> Listing | None:
+        """Extract listing details from Pinkbike URL."""
         pass
 ```
 
 **Dependencies:**
-- [External library or module]
-- [Internal component]
+- `src/adapters/base.py` (MarketplaceAdapter)
+- Playwright for browser automation
 
-### Component 2: [Component Name]
+### Component 4: TrekRedBarnAdapter
 
-**File:** `src/path/to/another_file.py`
+**File:** `src/adapters/trek_redbarn.py`
 
-[Similar structure as Component 1]
-
-## Data Models
-
-### Model: ExampleModel
-
-**File:** `src/models/example.py`
-
-```python
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
-
-class ExampleModel(Base):
-    """Database model for example data."""
-
-    __tablename__ = 'examples'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False, unique=True)
-    description = Column(String(500))
-    created_at = Column(DateTime, nullable=False)
-```
-
-## API Endpoints
-
-### POST /api/endpoint
-
-**Description:** [What this endpoint does]
-
-**Request:**
-```json
-{
-  "field1": "value",
-  "field2": 123
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": 1,
-  "status": "success",
-  "data": {
-    "result": "value"
-  }
-}
-```
-
-**Response (400 Bad Request):**
-```json
-{
-  "error": "Validation failed",
-  "details": ["field1 is required"]
-}
-```
+**Purpose:** Searches Trek Red Barn Refresh certified pre-owned inventory.
 
 **Implementation:**
 
 ```python
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+class TrekRedBarnAdapter(MarketplaceAdapter):
+    """Adapter for Trek Red Barn Refresh certified pre-owned bikes."""
 
-router = APIRouter()
+    BASE_URL = "https://www.trekbikes.com/us/en_US/certified-used-bikes/"
 
-class RequestModel(BaseModel):
-    field1: str
-    field2: int
+    async def search(self, query: str, location: str | None = None) -> list[str]:
+        """Search Trek Red Barn for Allant+ models."""
+        pass
 
-class ResponseModel(BaseModel):
-    id: int
-    status: str
-    data: dict
-
-@router.post("/api/endpoint", response_model=ResponseModel)
-async def endpoint_handler(request: RequestModel):
-    """Handle endpoint request."""
-    # Implementation
-    pass
+    async def get_listing_details(self, url: str) -> Listing | None:
+        """Extract listing details from Trek Red Barn URL."""
+        pass
 ```
 
-### GET /api/endpoint/{id}
+**Dependencies:**
+- `src/adapters/base.py` (MarketplaceAdapter)
+- Playwright for browser automation
 
-**Description:** [What this endpoint does]
+## Data Models
 
-[Similar structure as POST endpoint]
+### Model: BikeScoringWeights
+
+**File:** `src/models.py`
+
+```python
+@dataclass
+class BikeScoringWeights:
+    """Configurable weights for bike relevance scoring."""
+
+    model_allant_7s: int = 40
+    model_allant_7_penalty: int = -30
+    model_allant_plus: int = 10
+    class_3: int = 20
+    class_1_penalty: int = -25
+    battery_625wh: int = 20
+    battery_500wh_penalty: int = -15
+    range_extender: int = 15
+    frame_large: int = 5
+```
+
+## Configuration
+
+### bike_config.yaml
+
+```yaml
+search_type: bike
+
+target:
+  brand: Trek
+  model: Allant+ 7S
+  class: 3
+  max_speed_mph: 28
+  battery_wh: 625
+  range_extender: required
+  frame_size: Large
+
+location:
+  center: "Indianapolis, IN 46220"
+  radius_miles: 300
+
+scoring:
+  weights:
+    model_allant_7s: 40
+    class_3: 20
+    battery_625wh: 20
+    range_extender: 15
+    frame_large: 5
+
+marketplaces:
+  - name: ebay
+    enabled: true
+  - name: craigslist
+    enabled: true
+  - name: pinkbike
+    enabled: true
+  - name: trek_redbarn
+    enabled: true
+```
 
 ## Testing Requirements
 
 ### Unit Tests
 
-**File:** `tests/test_example.py`
+**File:** `tests/test_bike_scoring.py`
 
 ```python
-import pytest
-from src.module import ExampleClass
+def test_allant_7s_full_match():
+    """Test perfect match for Allant+ 7S with all requirements."""
+    scorer = BikeRelevanceScorer()
+    listing = Listing(
+        url="https://example.com/bike",
+        source="test",
+        title="Trek Allant+ 7S Large 625Wh with Range Extender",
+        description="Class 3 28mph e-bike"
+    )
+    result = scorer.score(listing)
+    assert result.score >= 70
+    assert result.confidence == "high"
 
-def test_example_success():
-    """Test successful operation."""
-    instance = ExampleClass("test", 123)
-    result = instance.method_name("input")
-    assert result["status"] == "success"
-
-def test_example_validation_error():
-    """Test validation error handling."""
-    instance = ExampleClass("test", 123)
-    with pytest.raises(ValueError):
-        instance.method_name("")
+def test_allant_7_rejection():
+    """Test that Allant+ 7 (Class 1) is penalized."""
+    scorer = BikeRelevanceScorer()
+    listing = Listing(
+        url="https://example.com/bike",
+        source="test",
+        title="Trek Allant+ 7 Class 1 20mph"
+    )
+    result = scorer.score(listing)
+    assert result.score < 40
+    assert "WRONG" in str(result.matched_factors)
 ```
 
 ### Integration Tests
 
-**File:** `tests/test_integration.py`
+**File:** `tests/test_bike_integration.py`
 
 ```python
-from fastapi.testclient import TestClient
-from src.main import app
+def test_create_orchestrator_bike():
+    """Test factory creates BikeSearchOrchestrator for bike config."""
+    config = {"search_type": "bike"}
+    orchestrator = create_orchestrator(config)
+    assert isinstance(orchestrator, BikeSearchOrchestrator)
 
-client = TestClient(app)
-
-def test_endpoint_integration():
-    """Test API endpoint integration."""
-    response = client.post("/api/endpoint", json={
-        "field1": "value",
-        "field2": 123
-    })
-    assert response.status_code == 200
-    assert response.json()["status"] == "success"
+def test_create_orchestrator_ring():
+    """Test factory creates SearchOrchestrator for ring config."""
+    config = {"search_type": "ring"}
+    orchestrator = create_orchestrator(config)
+    assert isinstance(orchestrator, SearchOrchestrator)
 ```
 
 ## Quality Gates
 
-- [ ] Test coverage ≥ 80%
-- [ ] All tests passing
-- [ ] Linting clean (ruff check)
-- [ ] Type checking clean (mypy)
-- [ ] API documentation complete
-
-## Container Specifications
-
-### Containerfile
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev
-
-COPY src/ src/
-
-EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD python -c "import requests; requests.get('http://localhost:8000/health')"
-
-CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-### podman-compose.yml
-
-```yaml
-version: '3.8'
-
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Containerfile
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./data:/app/data
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-```
-
-## Dependencies
-
-**pyproject.toml additions:**
-
-```toml
-[project]
-dependencies = [
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
-    "sqlalchemy>=2.0.0",
-    "pydantic>=2.5.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "pytest-asyncio>=0.21.0",
-    "httpx>=0.25.0",
-    "ruff>=0.1.0",
-    "mypy>=1.7.0",
-]
-```
+- [x] Test coverage >= 80%
+- [x] All tests passing
+- [x] Linting clean (ruff check)
+- [x] Type checking clean (mypy)
+- [x] CLI works with both ring and bike configs
 
 ## Implementation Notes
 
 ### Key Considerations
 
-- [Important implementation detail]
-- [Potential gotcha or edge case]
-- [Performance consideration]
+- Allant+ 7S vs Allant+ 7 distinction is critical (Class 3 vs Class 1)
+- Battery capacity validation requires parsing "625Wh" patterns
+- Range extender detection uses multiple synonyms (dual battery, second battery, etc.)
+- Frame size matching avoids false positives from single-letter "L" patterns
 
 ### Error Handling
 
-- [How to handle specific error type]
-- [Validation strategy]
-- [Retry logic if applicable]
+- Per-adapter error isolation (one failing marketplace doesn't stop others)
+- Graceful degradation if marketplace unavailable
+- Retry with exponential backoff for transient failures
 
-### Security
+### Validation Rules
 
-- [Input validation approach]
-- [Authentication requirements]
-- [Authorization checks]
+- **REJECT:** Allant+ 7 (non-S) models
+- **REJECT:** 500Wh battery only (no upgrade)
+- **REJECT:** Class 1 (20 mph) confirmed
+- **PARTIAL:** 625Wh without range extender (flag for follow-up)
 
 ## References
 
-- [Link to external documentation]
-- [Related specifications]
-- [Design patterns used]
+- [Trek Allant+ 7S Specs](https://www.trekbikes.com/us/en_US/bikes/hybrid-bikes/electric-hybrid-bikes/allant/allant-7s/p/35017/)
+- [planning/bike-search/requirements.md](../../planning/bike-search/requirements.md)
+- [planning/bike-search/architecture.md](../../planning/bike-search/architecture.md)

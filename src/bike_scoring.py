@@ -165,13 +165,17 @@ class BikeRelevanceScorer:
     def _score_frame(self, text: str, score: int, factors: list[str]) -> tuple[int, list[str]]:
         """Score based on frame size (Large/L preferred)."""
         # Check for Large frame
+        # Note: Avoid overly broad patterns like r"\bl\b" which match single "l" anywhere
         large_patterns = [
             r"\blarge\b",
-            r"\bl\b",  # Single "L" for size
-            r"size\s*l\b",
-            r"frame\s*l\b",
-            r"size:\s*l\b",
-            r"size:\s*large",
+            r"size[:\s]+l\b",  # "size: L" or "size L"
+            r"frame[:\s]+l\b",  # "frame: L" or "frame L"
+            r"size[:\s]+large",
+            r"\(l\)",  # "(L)" common in listings
+            r"55\s*cm",  # 55cm = Large frame
+            r"56\s*cm",
+            r"57\s*cm",
+            r"58\s*cm",
         ]
         if any(re.search(pattern, text) for pattern in large_patterns):
             score += self.weights.frame_large
