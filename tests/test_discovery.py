@@ -176,9 +176,11 @@ class TestMarketplaceFilter:
 
         filters = filter.get_site_filters(["ebay", "etsy"])
 
-        assert len(filters) == 2
-        assert any("ebay" in f for f in filters)
-        assert any("etsy" in f for f in filters)
+        # eBay has 6 TLDs (com, co.uk, de, fr, ca, au), Etsy has 1
+        assert len(filters) == 7
+        assert "site:ebay.com" in filters
+        assert "site:ebay.co.uk" in filters
+        assert "site:etsy.com" in filters
 
 
 class TestAggregatedDiscovery:

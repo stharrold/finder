@@ -19,7 +19,7 @@ class CraigslistAdapter(MarketplaceAdapter):
     BASE_URL = "https://{region}.craigslist.org"
     NAME = "craigslist"
 
-    # Region codes within 300 miles of Indianapolis
+    # Region codes within approximately 300 miles of Indianapolis (some slightly beyond)
     DEFAULT_REGIONS = [
         # Indiana
         "indianapolis",

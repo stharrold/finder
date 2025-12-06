@@ -8,6 +8,18 @@ from src.extractors.base import ExtractedListing, ListingExtractor
 
 logger = logging.getLogger(__name__)
 
+# ISO 4217 currency code to symbol mapping
+CURRENCY_SYMBOLS: dict[str, str] = {
+    "USD": "$",
+    "EUR": "€",
+    "GBP": "£",
+    "CAD": "C$",
+    "AUD": "A$",
+}
+
+# Maximum description length before truncation
+MAX_DESCRIPTION_LENGTH = 500
+
 
 class StructuredDataExtractor(ListingExtractor):
     """Extracts listing data from structured markup.
@@ -182,10 +194,8 @@ class StructuredDataExtractor(ListingExtractor):
             if isinstance(offers, dict):
                 price = offers.get("price")
                 if price:
-                    # Map ISO 4217 currency codes to symbols
-                    currency_symbols = {"USD": "$", "EUR": "€", "GBP": "£", "CAD": "C$", "AUD": "A$"}
                     currency_code = offers.get("priceCurrency", "USD")
-                    symbol = currency_symbols.get(currency_code, currency_code)
+                    symbol = CURRENCY_SYMBOLS.get(currency_code, currency_code)
                     price = f"{symbol}{price}"
 
             # Direct price
@@ -204,7 +214,7 @@ class StructuredDataExtractor(ListingExtractor):
                     url=url,
                     title=title,
                     price=price,
-                    description=description[:500] if description else None,
+                    description=self._truncate(description) if description else None,
                     image_url=image_url,
                     confidence=0.9,  # High confidence for JSON-LD
                 )
@@ -231,10 +241,8 @@ class StructuredDataExtractor(ListingExtractor):
             # Try to get price from product:price:amount
             price = og_data.get("product_price:amount")
             if price:
-                # Map ISO 4217 currency codes to symbols
-                currency_symbols = {"USD": "$", "EUR": "€", "GBP": "£", "CAD": "C$", "AUD": "A$"}
                 currency_code = og_data.get("product_price:currency", "USD")
-                symbol = currency_symbols.get(currency_code, currency_code)
+                symbol = CURRENCY_SYMBOLS.get(currency_code, currency_code)
                 price = f"{symbol}{price}"
 
             if title:
@@ -242,7 +250,7 @@ class StructuredDataExtractor(ListingExtractor):
                     url=url,
                     title=title,
                     price=price,
-                    description=description[:500] if description else None,
+                    description=self._truncate(description) if description else None,
                     image_url=image_url,
                     confidence=0.7,  # Medium confidence for OG
                 )
@@ -272,7 +280,7 @@ class StructuredDataExtractor(ListingExtractor):
                     url=url,
                     title=title,
                     price=price,
-                    description=description[:500] if description else None,
+                    description=self._truncate(description) if description else None,
                     image_url=image_url,
                     confidence=0.6,  # Lower confidence for microdata
                 )
@@ -280,3 +288,16 @@ class StructuredDataExtractor(ListingExtractor):
             logger.warning(f"Error parsing microdata: {e}")
 
         return None
+
+    def _truncate(self, text: str) -> str:
+        """Truncate text with ellipsis if it exceeds max length.
+
+        Args:
+            text: Text to truncate.
+
+        Returns:
+            Truncated text with ellipsis if needed.
+        """
+        if len(text) <= MAX_DESCRIPTION_LENGTH:
+            return text
+        return text[: MAX_DESCRIPTION_LENGTH - 3] + "..."

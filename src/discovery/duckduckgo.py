@@ -2,7 +2,7 @@
 
 import logging
 import re
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from urllib.parse import quote_plus, unquote, urlparse
 
 from playwright.async_api import Page
@@ -25,7 +25,7 @@ class DuckDuckGoDiscovery(SearchDiscovery):
     NAME = "duckduckgo"
     BASE_URL = "https://duckduckgo.com"
 
-    async def search(self, page: Page, query: str, site_filter: str | None = None) -> AsyncIterator[DiscoveryResult]:
+    async def search(self, page: Page, query: str, site_filter: str | None = None) -> AsyncGenerator[DiscoveryResult, None]:
         """Search DuckDuckGo for marketplace listings.
 
         Args:

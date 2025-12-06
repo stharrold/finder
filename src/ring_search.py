@@ -287,7 +287,10 @@ class SearchOrchestrator:
 
             except Exception as e:
                 # Don't mark failed URLs as checked - they can be retried next run
-                logger.warning(f"Error processing discovered URL {result.url}: {e}")
+                logger.warning(
+                    f"Error processing discovered URL {result.url}: "
+                    f"{type(e).__name__}: {e}"
+                )
 
     async def _check_known_leads(self, page: Page) -> None:
         """Check known lead URLs first.

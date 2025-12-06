@@ -40,7 +40,7 @@ marketplaces:
   - name: craigslist
     enabled: true
     priority: 4
-    # Regions within 300 miles of Indianapolis
+    # Regions within approximately 300 miles of Indianapolis (some slightly beyond)
     regions:
       # Indiana
       - indianapolis

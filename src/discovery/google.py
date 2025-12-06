@@ -2,7 +2,7 @@
 
 import logging
 import re
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from urllib.parse import quote_plus, unquote, urlparse
 
 from playwright.async_api import Page
@@ -28,7 +28,16 @@ class GoogleDiscovery(SearchDiscovery):
     NAME = "google"
     BASE_URL = "https://www.google.com/search"
 
-    async def search(self, page: Page, query: str, site_filter: str | None = None) -> AsyncIterator[DiscoveryResult]:
+    def __init__(self, *args, **kwargs):
+        """Initialize Google discovery with ToS warning."""
+        super().__init__(*args, **kwargs)
+        logger.warning(
+            "Google Search scraping may violate ToS. For production use, "
+            "consider the official Google Custom Search JSON API: "
+            "https://developers.google.com/custom-search/v1/overview"
+        )
+
+    async def search(self, page: Page, query: str, site_filter: str | None = None) -> AsyncGenerator[DiscoveryResult, None]:
         """Search Google for marketplace listings.
 
         Args:

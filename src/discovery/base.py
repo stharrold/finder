@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 
 from playwright.async_api import Page
@@ -61,7 +61,7 @@ class SearchDiscovery(ABC):
         await asyncio.sleep(self.rate_limit_delay)
 
     @abstractmethod
-    async def search(self, page: Page, query: str, site_filter: str | None = None) -> AsyncIterator[DiscoveryResult]:
+    def search(self, page: Page, query: str, site_filter: str | None = None) -> AsyncGenerator[DiscoveryResult, None]:
         """Search for marketplace listings.
 
         Args:
@@ -79,7 +79,7 @@ class SearchDiscovery(ABC):
         page: Page,
         queries: list[str],
         site_filters: list[str] | None = None,
-    ) -> AsyncIterator[DiscoveryResult]:
+    ) -> AsyncGenerator[DiscoveryResult, None]:
         """Discover marketplace listings across multiple queries.
 
         Args:
@@ -91,11 +91,11 @@ class SearchDiscovery(ABC):
             Deduplicated DiscoveryResult objects.
         """
         seen_urls: set[str] = set()
-        # List of site filter strings (e.g., ["site:ebay.com"]) or [None] for no filter
-        site_filter_list: list[str | None] = site_filters if site_filters else [None]
+        # List of site filter strings or [None] for no filter
+        filter_list: list[str | None] = list(site_filters) if site_filters else [None]
 
         for query in queries:
-            for site_filter in site_filter_list:
+            for site_filter in filter_list:
                 try:
                     async for result in self.search(page, query, site_filter):
                         # Deduplicate by URL
@@ -123,7 +123,7 @@ class AggregatedDiscovery:
         page: Page,
         queries: list[str],
         site_filters: list[str] | None = None,
-    ) -> AsyncIterator[DiscoveryResult]:
+    ) -> AsyncGenerator[DiscoveryResult, None]:
         """Discover listings from all providers.
 
         Args:

@@ -236,12 +236,36 @@ class MarketplaceFilter:
 
         for mp in self.marketplaces:
             if mp.name in target_mps:
-                # Extract base domain from first pattern
-                pattern = mp.domain_patterns[0]
-                # Convert regex pattern to domain (extract first domain before special chars)
-                domain = re.sub(r'\\\.', '.', pattern.split('(')[0])
-                domain = re.sub(r'[^a-z0-9.]', '', domain)
-                if domain:
-                    filters.append(f"site:{domain}")
+                for pattern in mp.domain_patterns:
+                    domains = self._expand_domain_pattern(pattern)
+                    for domain in domains:
+                        filters.append(f"site:{domain}")
 
         return filters
+
+    def _expand_domain_pattern(self, pattern: str) -> list[str]:
+        """Expand a regex domain pattern into all possible domain strings.
+
+        Args:
+            pattern: Regex pattern like r"ebay\\.(com|co\\.uk|de|fr)"
+
+        Returns:
+            List of expanded domains like ["ebay.com", "ebay.co.uk", "ebay.de", "ebay.fr"]
+        """
+        # Match base domain and alternation group: ebay\.(com|co\.uk|de|fr)
+        m = re.match(r"^([a-z0-9]+)\\\.\(([^)]+)\)$", pattern, re.IGNORECASE)
+        if m:
+            base = m.group(1)
+            alts = m.group(2).split("|")
+            domains = []
+            for alt in alts:
+                # Replace escaped dots with real dots
+                domain = base + "." + alt.replace("\\.", ".")
+                domains.append(domain)
+            return domains
+
+        # Fallback: try to remove regex escapes and return as-is
+        domain = re.sub(r"\\\\", "", pattern)  # Remove double escapes
+        domain = re.sub(r"\\.", ".", domain)  # Replace \. with .
+        domain = re.sub(r"[^a-z0-9.]", "", domain)  # Remove remaining special chars
+        return [domain] if domain else []
