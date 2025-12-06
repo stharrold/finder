@@ -133,17 +133,18 @@ rate_limiting:
 # listings beyond the configured marketplace adapters. This enables discovery of listings
 # on any marketplace, including those not directly supported (e.g., Facebook, OfferUp, etc.).
 discovery:
-  enabled: false  # Set to true to enable adaptive search
+  enabled: true  # Adaptive search via search engines
   providers:
     - duckduckgo  # No API key needed, privacy-friendly
     # - google    # May require handling CAPTCHAs
   rate_limit_delay: 3.0  # Seconds between search requests
   max_results_per_query: 20
-  include_unknown_domains: false  # Include results from non-marketplace sites
-  # Site filters to restrict searches (optional)
-  # site_filters:
-  #   - "site:facebook.com/marketplace"
-  #   - "site:offerup.com"
+  include_unknown_domains: true  # Include results from any marketplace
+  # Site filters for additional marketplaces (searched in addition to configured adapters)
+  site_filters:
+    - "site:facebook.com/marketplace"
+    - "site:offerup.com"
+    - "site:nextdoor.com"
 
 # Output configuration
 output:
