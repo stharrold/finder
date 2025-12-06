@@ -4,9 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-Automated daily search across online marketplaces (ShopGoodwill, eBay, Etsy, Craigslist, Ruby Lane, Mercari, Poshmark) to locate a lost antique ring. Captures screenshots of promising matches, maintains deduplicated URL tracking, and generates daily summary reports.
+Automated daily search across online marketplaces to locate a lost antique ring ("The Giulia Ring" - 10K yellow gold with amethyst and seed pearls, size 7, lost in Indianapolis).
 
-**Configuration**: Edit `config.yaml` to customize search keywords, scoring weights, and marketplace priorities.
+**Search Coverage**:
+- **Fixed Adapters**: ShopGoodwill, eBay, Etsy, Craigslist (24 regions/300mi), Ruby Lane, Mercari, Poshmark
+- **Adaptive Discovery**: Any marketplace via DuckDuckGo + Facebook Marketplace, OfferUp, Nextdoor
+
+**Configuration**: Edit `config.yaml` to customize search keywords, scoring weights, marketplace priorities, and discovery settings.
 
 ## Development Commands
 
@@ -98,6 +102,13 @@ contrib/<gh-user>             ← Personal contribution branch
 ### PR Flow
 
 All changes flow: `contrib/<user>` → `develop` → `main`
+
+## Scheduled Automation
+
+Daily search runs at 8:00 AM via macOS LaunchAgent:
+- **Plist**: `~/Library/LaunchAgents/com.stharrold.ring-search.plist`
+- **Logs**: `output/logs/launchd.log`
+- **Manual trigger**: `launchctl kickstart gui/$(id -u)/com.stharrold.ring-search`
 
 ## Critical Guidelines
 
