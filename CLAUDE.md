@@ -8,10 +8,10 @@ Automated daily search across online marketplaces to locate specific items. Supp
 
 **Ring Search** (config.yaml): Lost antique ring ("The Giulia Ring" - 10K yellow gold with amethyst and seed pearls, size 7, lost in Indianapolis).
 
-**Bike Search** (bike_config.yaml): Trek Allant+ 7S electric bike (Class 3, 625Wh battery, range extender, Large frame, within 300mi of Indianapolis).
+**Bike Search** (bike_config.yaml): Trek Allant+ 7S electric bike (Class 3, 625Wh battery, range extender, Large frame, within 600mi of Indianapolis).
 
 **Search Coverage**:
-- **Fixed Adapters**: ShopGoodwill, eBay, Etsy, Craigslist (24 regions/300mi), Ruby Lane, Mercari, Poshmark, Pinkbike, Trek Red Barn Refresh
+- **Fixed Adapters**: ShopGoodwill, eBay, Etsy, Craigslist (24 regions/300mi), Ruby Lane, Mercari, Poshmark, Pinkbike, Trek Red Barn Refresh, BicycleBlueBook
 - **Adaptive Discovery**: Any marketplace via DuckDuckGo + Facebook Marketplace, OfferUp, Nextdoor
 
 **Configuration**: Edit `config.yaml` (ring) or `bike_config.yaml` (bike) to customize search keywords, scoring weights, marketplace priorities, and discovery settings.
@@ -57,7 +57,7 @@ BikeSearchOrchestrator (src/bike_search.py)    # Bike search orchestrator
 ├── MarketplaceAdapter (src/adapters/base.py) - Abstract interface
 │   ├── ShopGoodwillAdapter, EbayAdapter, EtsyAdapter, CraigslistAdapter
 │   ├── RubyLaneAdapter, MercariAdapter, PoshmarkAdapter
-│   ├── PinkbikeAdapter, TrekRedBarnAdapter    # Bike-specific adapters
+│   ├── PinkbikeAdapter, TrekRedBarnAdapter, BicycleBlueBookAdapter  # Bike-specific
 ├── SearchDiscovery (src/discovery/base.py) - Search engine discovery
 │   ├── GoogleDiscovery, DuckDuckGoDiscovery
 │   └── MarketplaceFilter - URL filtering and prioritization
@@ -144,10 +144,11 @@ All changes flow: `contrib/<user>` → `develop` → `main`
 
 ## Scheduled Automation
 
-Daily search runs at 8:00 AM via macOS LaunchAgent:
+Daily search runs at 8:00 AM via macOS LaunchAgent (runs both ring and bike searches):
 - **Plist**: `~/Library/LaunchAgents/com.stharrold.ring-search.plist`
-- **Logs**: `output/logs/launchd.log`
+- **Logs**: `output/logs/launchd.log` (ring), `output/logs/bike/` (bike - separate dedup)
 - **Manual trigger**: `launchctl kickstart gui/$(id -u)/com.stharrold.ring-search`
+- **Reload after changes**: `launchctl unload ~/Library/LaunchAgents/com.stharrold.ring-search.plist && launchctl load ~/Library/LaunchAgents/com.stharrold.ring-search.plist`
 
 ## Critical Guidelines
 

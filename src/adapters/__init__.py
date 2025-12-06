@@ -1,6 +1,7 @@
 """Marketplace adapters for ring search automation."""
 
 from src.adapters.base import MarketplaceAdapter
+from src.adapters.bicyclebluebook import BicycleBlueBookAdapter
 from src.adapters.craigslist import CraigslistAdapter
 from src.adapters.ebay import EbayAdapter
 from src.adapters.etsy import EtsyAdapter
@@ -22,6 +23,7 @@ ADAPTER_MAP: dict[str, type[MarketplaceAdapter]] = {
     "poshmark": PoshmarkAdapter,
     "pinkbike": PinkbikeAdapter,
     "trek_redbarn": TrekRedBarnAdapter,
+    "bicyclebluebook": BicycleBlueBookAdapter,
 }
 
 __all__ = [
@@ -35,5 +37,6 @@ __all__ = [
     "PoshmarkAdapter",
     "PinkbikeAdapter",
     "TrekRedBarnAdapter",
+    "BicycleBlueBookAdapter",
     "ADAPTER_MAP",
 ]

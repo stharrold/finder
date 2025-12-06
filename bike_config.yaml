@@ -10,7 +10,7 @@ target_bike:
   range_extender: true  # Second battery required
   frame_size: "Large"
   color: "any"  # Not filtering by color
-  search_radius_miles: 300
+  search_radius_miles: 600
   search_center: "Indianapolis, IN"
 
 # Marketplaces to search
@@ -83,8 +83,20 @@ marketplaces:
       category: "e-bikes"
       model_family: "Allant"
 
+  - name: bicyclebluebook
+    enabled: true
+    priority: 5
+    searches:
+      - "Trek Allant+ 7S"
+      - "Trek Allant 7S"
+      - "Trek Allant electric"
+
 # Known leads to check first (add specific URLs here when found)
-known_leads: []
+known_leads:
+  - url: "https://www.trekbikes.com/us/en_US/pre-owned-bikes/pre-owned-electric-bikes/"
+    note: "Trek official pre-owned electric bikes"
+  - url: "https://www.bicyclebluebook.com/listing/2021-trek-allant+-7s-94618/"
+    note: "2021 Trek Allant+ 7S - Large - $2,200 - Herndon, VA - Excellent condition with range extender"
 
 # Scoring configuration
 scoring:
@@ -121,10 +133,13 @@ discovery:
     - "site:facebook.com/marketplace"
     - "site:offerup.com"
     - "site:mercari.com"
+    - "site:nextdoor.com"
+    - "site:trekbikes.com/us/en_US/pre-owned-bikes"
+    - "site:bicyclebluebook.com"
 
 # Output configuration
 output:
   base_dir: "output"
   screenshot_format: "png"
-  logs_dir: "logs"
+  logs_dir: "logs/bike"
   screenshots_dir: "screenshots"
