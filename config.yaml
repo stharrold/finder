@@ -40,12 +40,37 @@ marketplaces:
   - name: craigslist
     enabled: true
     priority: 4
+    # Regions within 300 miles of Indianapolis
     regions:
+      # Indiana
       - indianapolis
       - bloomington
       - fortwayne
-      - louisville
+      - muncie
+      - tippecanoe  # Lafayette
+      - southbend
+      - terrehaute
+      - evansville
+      # Ohio
       - cincinnati
+      - dayton
+      - columbus
+      - toledo
+      - cleveland
+      # Kentucky
+      - louisville
+      - lexington
+      # Illinois
+      - chicago
+      - chambana  # Champaign-Urbana
+      - peoria
+      # Michigan
+      - detroit
+      - grandrapids
+      # Missouri
+      - stlouis
+      # Tennessee
+      - nashville
     searches:
       - "amethyst ring"
       - "pearl ring gold"
