@@ -35,11 +35,7 @@ class RubyLaneAdapter(MarketplaceAdapter):
 
             try:
                 # Navigate to search results - filter to Jewelry category
-                search_url = (
-                    f"{self.BASE_URL}/search"
-                    f"?q={quote_plus(query)}"
-                    f"&cat=jewelry"
-                )
+                search_url = f"{self.BASE_URL}/search?q={quote_plus(query)}&cat=jewelry"
                 await page.goto(search_url, wait_until="domcontentloaded")
                 await self._rate_limit()
 

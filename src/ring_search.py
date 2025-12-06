@@ -19,6 +19,14 @@ from src.adapters import (
 )
 from src.capture import ScreenshotCapture
 from src.dedup import DedupManager
+from src.discovery import DuckDuckGoDiscovery, GoogleDiscovery, MarketplaceFilter
+from src.discovery.base import AggregatedDiscovery, SearchDiscovery
+from src.extractors import (
+    AdaptiveExtractor,
+    GenericListingExtractor,
+    LegacyAdapterBridge,
+    StructuredDataExtractor,
+)
 from src.logger import SearchLogger
 from src.models import Listing
 from src.scoring import RelevanceScorer
@@ -39,14 +47,16 @@ class SearchOrchestrator:
         "poshmark": PoshmarkAdapter,
     }
 
-    def __init__(self, config_path: Path):
+    def __init__(self, config_path: Path, adaptive: bool = False):
         """Initialize orchestrator with configuration.
 
         Args:
             config_path: Path to config.yaml file.
+            adaptive: Enable adaptive search discovery mode.
         """
         self.config = self._load_config(config_path)
         self.config_path = config_path
+        self.adaptive = adaptive
 
         # Setup output directory
         output_dir = Path(self.config.get("output", {}).get("base_dir", "output"))
@@ -62,6 +72,61 @@ class SearchOrchestrator:
         rate_config = self.config.get("rate_limiting", {})
         self.min_delay = rate_config.get("min_delay_seconds", 2.0)
         self.max_delay = rate_config.get("max_delay_seconds", 5.0)
+
+        # Initialize adaptive components if enabled
+        discovery_config = self.config.get("discovery", {})
+        # Declare adaptive component types
+        self.discovery: AggregatedDiscovery | None = None
+        self.extractor: AdaptiveExtractor | None = None
+        self.marketplace_filter: MarketplaceFilter | None = None
+
+        if adaptive or discovery_config.get("enabled", False):
+            self._init_adaptive_components(discovery_config)
+
+    def _init_adaptive_components(self, discovery_config: dict) -> None:
+        """Initialize discovery and extraction components.
+
+        Args:
+            discovery_config: Discovery configuration from config.yaml.
+        """
+        # Initialize discovery providers
+        providers: list[SearchDiscovery] = []
+        rate_limit = discovery_config.get("rate_limit_delay", 3.0)
+        max_results = discovery_config.get("max_results_per_query", 20)
+
+        for provider_name in discovery_config.get("providers", ["duckduckgo"]):
+            if provider_name == "duckduckgo":
+                providers.append(
+                    DuckDuckGoDiscovery(
+                        rate_limit_delay=rate_limit,
+                        max_results=max_results,
+                    )
+                )
+            elif provider_name == "google":
+                providers.append(
+                    GoogleDiscovery(
+                        rate_limit_delay=rate_limit,
+                        max_results=max_results,
+                    )
+                )
+
+        self.discovery = AggregatedDiscovery(providers) if providers else None
+
+        # Initialize marketplace filter
+        self.marketplace_filter = MarketplaceFilter(
+            include_unknown=discovery_config.get("include_unknown_domains", False)
+        )
+
+        # Initialize adaptive extractor chain
+        self.extractor = AdaptiveExtractor(
+            [
+                StructuredDataExtractor(),
+                LegacyAdapterBridge(),
+                GenericListingExtractor(),
+            ]
+        )
+
+        logger.info(f"Adaptive mode enabled with {len(providers)} discovery provider(s)")
 
     def _load_config(self, config_path: Path) -> dict[str, Any]:
         """Load configuration from YAML file.
@@ -142,6 +207,10 @@ class SearchOrchestrator:
 
                     await self._search_marketplace(page, marketplace)
 
+                # Run adaptive discovery if enabled
+                if self.discovery and self.adaptive:
+                    await self._run_adaptive_discovery(page)
+
             finally:
                 await browser.close()
 
@@ -149,6 +218,76 @@ class SearchOrchestrator:
         self.logger.write_daily_summary()
 
         return self.logger.get_stats()
+
+    async def _run_adaptive_discovery(self, page: Page) -> None:
+        """Run adaptive search discovery to find listings on any marketplace.
+
+        Args:
+            page: Playwright page instance.
+        """
+        if not self.discovery or not self.extractor:
+            return
+
+        logger.info("Running adaptive search discovery")
+
+        # Get search queries from marketplaces config
+        queries = set()
+        for mp in self.config.get("marketplaces", []):
+            for query in mp.get("searches", []):
+                queries.add(query)
+
+        if not queries:
+            logger.warning("No search queries for adaptive discovery")
+            return
+
+        # Get site filters if configured
+        discovery_config = self.config.get("discovery", {})
+        site_filters = discovery_config.get("site_filters")
+
+        # Discover listings
+        discovered_urls = []
+        async for result in self.discovery.discover_all(page, list(queries), site_filters):
+            if self.dedup.is_new(result.url):
+                discovered_urls.append(result)
+
+        logger.info(f"Discovered {len(discovered_urls)} new URLs")
+
+        # Filter to marketplace URLs
+        if self.marketplace_filter:
+            discovered_urls = self.marketplace_filter.filter_results(discovered_urls)
+            logger.info(f"Filtered to {len(discovered_urls)} marketplace URLs")
+
+        # Extract and process each discovered listing
+        for result in discovered_urls:
+            try:
+                await page.goto(result.url, wait_until="domcontentloaded")
+                await page.wait_for_timeout(1000)  # Give JS time to render
+
+                # Use adaptive extractor
+                extracted = await self.extractor.extract(page, result.url)
+
+                if extracted:
+                    listing = extracted.to_listing()
+                    await self._process_listing(page, listing)
+                    # Only mark as checked after successful processing
+                    self.dedup.mark_checked(result.url)
+                else:
+                    # Fallback to basic extraction
+                    listing = Listing(
+                        url=result.url,
+                        source=result.marketplace or "discovery",
+                        title=result.title,
+                        price=None,
+                        description=result.snippet,
+                        image_url=None,
+                    )
+                    await self._process_listing(page, listing)
+                    # Only mark as checked after successful processing
+                    self.dedup.mark_checked(result.url)
+
+            except Exception as e:
+                # Don't mark failed URLs as checked - they can be retried next run
+                logger.warning(f"Error processing discovered URL {result.url}: {e}")
 
     async def _check_known_leads(self, page: Page) -> None:
         """Check known lead URLs first.

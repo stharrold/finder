@@ -49,5 +49,6 @@ warn_unused_ignores = true
 
 [dependency-groups]
 dev = [
+    "duckdb>=1.4.2",
     "types-pyyaml>=6.0.12.20250915",
 ]
