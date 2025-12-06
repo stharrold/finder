@@ -12,6 +12,9 @@ from src.adapters import (
     EbayAdapter,
     EtsyAdapter,
     MarketplaceAdapter,
+    MercariAdapter,
+    PoshmarkAdapter,
+    RubyLaneAdapter,
     ShopGoodwillAdapter,
 )
 from src.capture import ScreenshotCapture
@@ -31,6 +34,9 @@ class SearchOrchestrator:
         "ebay": EbayAdapter,
         "etsy": EtsyAdapter,
         "craigslist": CraigslistAdapter,
+        "rubylane": RubyLaneAdapter,
+        "mercari": MercariAdapter,
+        "poshmark": PoshmarkAdapter,
     }
 
     def __init__(self, config_path: Path):

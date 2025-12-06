@@ -50,6 +50,28 @@ marketplaces:
       - "amethyst ring"
       - "pearl ring gold"
 
+  - name: rubylane
+    enabled: true
+    priority: 5
+    searches:
+      - "amethyst pearl ring"
+      - "Victorian amethyst ring"
+      - "antique gold amethyst ring"
+
+  - name: mercari
+    enabled: true
+    priority: 6
+    searches:
+      - "amethyst pearl ring vintage"
+      - "antique amethyst ring gold"
+
+  - name: poshmark
+    enabled: true
+    priority: 7
+    searches:
+      - "amethyst pearl ring"
+      - "vintage amethyst gold ring"
+
 # Known leads to check first
 known_leads:
   - url: "https://www.etsy.com/uk/listing/1895838715/"
