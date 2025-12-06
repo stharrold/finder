@@ -14,7 +14,13 @@ def scorer() -> BikeRelevanceScorer:
 
 @pytest.fixture
 def custom_scorer() -> BikeRelevanceScorer:
-    """Create a scorer with custom weights."""
+    """Create a scorer with custom weights for testing.
+
+    Note: Only model_allant_7s, class_3, and battery_625wh are set here.
+    Other weights (range_extender, frame_large, penalties) remain at defaults.
+    This is intentional - we're testing that custom weights are applied correctly,
+    not that the total sums to 100. Score capping (0-100) handles any overflow.
+    """
     weights = BikeScoringWeights(
         model_allant_7s=50,
         class_3=25,

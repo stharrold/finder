@@ -87,6 +87,7 @@ class BikeRelevanceScorer:
             return score, factors
 
         # Check for Allant+ 7 (wrong model - Class 1)
+        # Note: text is already lowercased (line 35), so (?!\s*s) correctly excludes "7s"
         allant_7_patterns = [
             r"allant\+?\s*7(?!\s*s)",  # Allant+ 7 but not 7S
             r"allant\s+plus\s+7(?!\s*s)",
@@ -165,17 +166,15 @@ class BikeRelevanceScorer:
     def _score_frame(self, text: str, score: int, factors: list[str]) -> tuple[int, list[str]]:
         """Score based on frame size (Large/L preferred)."""
         # Check for Large frame
-        # Note: Avoid overly broad patterns like r"\bl\b" which match single "l" anywhere
+        # Note: Patterns require explicit size/frame context to avoid false positives
+        # Text is already lowercased, so patterns only need lowercase
         large_patterns = [
-            r"\blarge\b",
-            r"size[:\s]+l\b",  # "size: L" or "size L"
-            r"frame[:\s]+l\b",  # "frame: L" or "frame L"
-            r"size[:\s]+large",
+            r"\blarge\b",  # Word "large" with word boundaries
+            r"size[:\s]+l(?:\b|\s|$|,)",  # "size: L" or "size L" with proper termination
+            r"frame[:\s]+l(?:\b|\s|$|,)",  # "frame: L" or "frame L" with proper termination
+            r"size[:\s]+large",  # "size: large" or "size large"
             r"\(l\)",  # "(L)" common in listings
-            r"55\s*cm",  # 55cm = Large frame
-            r"56\s*cm",
-            r"57\s*cm",
-            r"58\s*cm",
+            r"5[5-8]\s*cm",  # 55-58cm = Large frame sizes
         ]
         if any(re.search(pattern, text) for pattern in large_patterns):
             score += self.weights.frame_large

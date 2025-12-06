@@ -133,8 +133,21 @@ class TrekRedBarnAdapter(MarketplaceAdapter):
                 image_url = None
                 if image_element:
                     image_url = await image_element.get_attribute("src")
-                    # Handle lazy loading
-                    if not image_url or "placeholder" in image_url.lower():
+                    # Handle lazy loading - check for placeholder indicators
+                    # Common patterns: placeholder URLs, data URIs, or missing src
+                    if image_url:
+                        is_placeholder = (
+                            "placeholder" in image_url.lower()
+                            or "data:image" in image_url  # Base64 placeholder
+                            or "blank.gif" in image_url.lower()
+                            or "spacer" in image_url.lower()
+                            or image_url.startswith("data:")
+                            or len(image_url) < 10  # Too short to be real URL
+                        )
+                        if is_placeholder:
+                            image_url = await image_element.get_attribute("data-src")
+                    else:
+                        # No src attribute, try data-src for lazy loading
                         image_url = await image_element.get_attribute("data-src")
 
                 # Extract category badge (e.g., "E-Bike")
