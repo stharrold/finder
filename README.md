@@ -85,8 +85,8 @@ uv run mypy src/
 
 ## Project Structure
 
-- `src/` - Ring search automation implementation
-- `tests/` - Test suite (107 tests, 62% coverage)
+- `src/` - Marketplace search automation implementation
+- `tests/` - Test suite (189 tests)
 - `planning/` - BMAD planning documents
 - `specs/` - SpecKit specifications
 - `.claude/` - Workflow commands and skills
