@@ -4,367 +4,388 @@
 **Slug:** bike-search
 **Date:** 2025-12-06
 
+## Overview
 
-<!-- Note: Customize task breakdown based on specific feature requirements -->
-<!-- This template provides the structure. Claude Code will populate with actual tasks. -->
+Extend the existing ring-search automation to support searching for a Trek Allant+ 7S electric bike. The implementation reuses the existing adapter pattern, scoring infrastructure, dedup manager, and report generation while adding bike-specific adapters and scoring logic.
+
+**Target Bike:**
+- Model: Trek Allant+ 7S (Class 3, 28 mph) - NOT Allant+ 7 (Class 1, 20 mph)
+- Battery: 625Wh (not 500Wh) with range extender
+- Frame: Large (L)
+- Location: Within 300mi of Indianapolis
 
 ## Task Breakdown
 
-### Phase 1: Foundation
+### Phase 1: Configuration & Models
 
-#### Task impl_001: [Task Name]
+#### Task T001: Create Bike Configuration
 
-**Estimated Time:** [Duration]
-**Priority:** High | Medium | Low
-
-**Files:**
-- `src/path/file1.py`
-- `src/path/file2.py`
-- `tests/test_file.py`
-
-**Description:**
-[Detailed description of what needs to be implemented]
-
-**Steps:**
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-
-**Acceptance Criteria:**
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-**Verification:**
-```bash
-# Commands to verify implementation
-uv run python -c "from src.module import Class; print('OK')"
-uv run pytest tests/test_file.py -v
-```
-
-**Dependencies:**
-- None (or list other task IDs)
-
----
-
-#### Task impl_002: [Task Name]
-
-**Estimated Time:** [Duration]
-**Priority:** High | Medium | Low
-
-**Files:**
-- `src/path/file3.py`
-
-**Description:**
-[Detailed description]
-
-**Steps:**
-1. [Step 1]
-2. [Step 2]
-
-**Acceptance Criteria:**
-- [ ] Criterion 1
-- [ ] Criterion 2
-
-**Verification:**
-```bash
-uv run pytest tests/test_file3.py
-```
-
-**Dependencies:**
-- impl_001 (must complete first)
-
----
-
-### Phase 2: Core Implementation
-
-#### Task impl_003: [Task Name]
-
-**Estimated Time:** [Duration]
 **Priority:** High
 
 **Files:**
-- `src/core/module.py`
-- `tests/test_module.py`
+- `bike_config.yaml` (new)
+- `src/models.py` (extend)
 
 **Description:**
-[Core business logic implementation]
+Create bike-specific configuration file with search terms, scoring weights, and marketplace settings for Trek Allant+ 7S.
 
 **Steps:**
-1. Create module structure
-2. Implement core functionality
-3. Add error handling
-4. Write comprehensive tests
+1. Create `bike_config.yaml` with target bike details
+2. Define bike-specific scoring weights (model: 40%, class: 20%, battery: 20%, range extender: 15%, frame: 5%)
+3. Configure marketplaces: eBay, Craigslist (24 regions), Pinkbike, Trek Red Barn Refresh
+4. Configure adaptive discovery for Facebook Marketplace, OfferUp, Mercari
+5. Add BikeScoringWeights to models.py
 
 **Acceptance Criteria:**
-- [ ] All business logic implemented
-- [ ] Error cases handled
-- [ ] Tests passing with >85% coverage
+- [ ] bike_config.yaml validates successfully
+- [ ] BikeScoringWeights dataclass exists with correct defaults
+- [ ] Search terms target Trek Allant+ 7S specifically
 
 **Verification:**
 ```bash
-uv run pytest tests/test_module.py --cov=src.core.module --cov-report=term
+uv run python -c "import yaml; yaml.safe_load(open('bike_config.yaml'))"
+uv run python -c "from src.models import BikeScoringWeights; print(BikeScoringWeights())"
 ```
 
 **Dependencies:**
-- impl_001, impl_002
+- None
 
 ---
 
-### Phase 3: API Layer
+#### Task T002: Create Bike Scoring Engine
 
-#### Task impl_004: [Task Name]
-
-**Estimated Time:** [Duration]
 **Priority:** High
 
 **Files:**
-- `src/api/routes.py`
-- `src/api/models.py`
-- `tests/test_api.py`
+- `src/bike_scoring.py` (new)
+- `tests/test_bike_scoring.py` (new)
 
 **Description:**
-[API endpoint implementation]
+Implement BikeRelevanceScorer class that scores listings based on Trek Allant+ 7S specifications.
 
 **Steps:**
-1. Define Pydantic models for request/response
-2. Implement endpoint handlers
-3. Add input validation
-4. Write integration tests
+1. Create BikeRelevanceScorer class following RelevanceScorer pattern
+2. Implement model validation (Allant+ 7S vs 7)
+3. Implement class validation (Class 3 @ 28mph vs Class 1 @ 20mph)
+4. Implement battery validation (625Wh requirement)
+5. Implement range extender detection
+6. Implement frame size detection (Large/L)
+7. Write comprehensive unit tests
+
+**Scoring Weights (from requirements):**
+- Model match (Allant+ 7S): 40 points
+- Class 3 confirmation: 20 points
+- 625Wh battery: 20 points
+- Range extender present: 15 points
+- Large frame: 5 points
+
+**Negative Scoring:**
+- Class 1 model: -50 points (hard rejection)
+- 500Wh battery: -20 points
 
 **Acceptance Criteria:**
-- [ ] Endpoints respond correctly
-- [ ] Validation working
-- [ ] Error responses formatted correctly
-- [ ] Integration tests passing
+- [ ] BikeRelevanceScorer correctly identifies Allant+ 7S vs 7
+- [ ] Class 3 (28 mph) properly differentiated from Class 1 (20 mph)
+- [ ] Battery capacity correctly detected (625Wh vs 500Wh)
+- [ ] Range extender mentioned earns bonus
+- [ ] Frame size L/Large detected
+- [ ] Test coverage ≥90%
 
 **Verification:**
 ```bash
-uv run pytest tests/test_api.py -v
-# Manual test:
-curl -X POST http://localhost:8000/api/endpoint -H "Content-Type: application/json" -d '{"field": "value"}'
+uv run pytest tests/test_bike_scoring.py -v --cov=src.bike_scoring
 ```
 
 **Dependencies:**
-- impl_003
+- T001
 
 ---
 
-### Phase 4: Testing
+### Phase 2: Marketplace Adapters
 
-#### Task test_001: Unit Tests
+#### Task T003: Create Pinkbike Adapter
 
-**Estimated Time:** [Duration]
 **Priority:** High
 
 **Files:**
-- `tests/test_*.py`
-- `tests/conftest.py`
+- `src/adapters/pinkbike.py` (new)
+- `tests/test_adapters/test_pinkbike.py` (new)
+- `src/adapters/__init__.py` (update)
 
 **Description:**
-Comprehensive unit tests for all modules.
-
-**Coverage Targets:**
-- Overall: ≥80%
-- Core modules: ≥90%
-- Utilities: ≥85%
+Implement Pinkbike marketplace adapter following the base adapter pattern.
 
 **Steps:**
-1. Set up pytest fixtures in conftest.py
-2. Write unit tests for each module
-3. Test happy paths and error conditions
-4. Achieve coverage targets
+1. Research Pinkbike buy/sell section URL structure
+2. Create PinkbikeAdapter subclassing MarketplaceAdapter
+3. Implement search() method with location filtering
+4. Implement get_listing_details() for full listing data
+5. Handle pagination
+6. Register in ADAPTER_MAP
+7. Write unit tests with mock responses
+
+**Acceptance Criteria:**
+- [ ] PinkbikeAdapter registered in ADAPTER_MAP
+- [ ] search() returns list of Listing objects
+- [ ] Location filtering works (300mi from Indianapolis)
+- [ ] get_listing_details() extracts title, price, description, images
+- [ ] Rate limiting respected
 
 **Verification:**
 ```bash
-uv run pytest --cov=src --cov-report=term --cov-report=html
+uv run python -c "from src.adapters import ADAPTER_MAP; print('pinkbike' in ADAPTER_MAP)"
+uv run pytest tests/test_adapters/test_pinkbike.py -v
+```
+
+**Dependencies:**
+- T001
+
+---
+
+#### Task T004: Create Trek Red Barn Refresh Adapter
+
+**Priority:** High
+
+**Files:**
+- `src/adapters/trek_redbarn.py` (new)
+- `tests/test_adapters/test_trek_redbarn.py` (new)
+- `src/adapters/__init__.py` (update)
+
+**Description:**
+Implement Trek Red Barn Refresh (certified pre-owned) adapter.
+
+**Steps:**
+1. Research Trek Red Barn Refresh website structure
+2. Create TrekRedBarnAdapter subclassing MarketplaceAdapter
+3. Implement search() for e-bike category with "Allant" filter
+4. Implement get_listing_details() with bike specifications
+5. Extract battery, class, and frame information from specs
+6. Register in ADAPTER_MAP
+7. Write unit tests
+
+**Acceptance Criteria:**
+- [ ] TrekRedBarnAdapter registered in ADAPTER_MAP
+- [ ] Searches within e-bike/Allant category
+- [ ] Extracts bike specifications (battery, class, frame)
+- [ ] Handles location/shipping availability
+
+**Verification:**
+```bash
+uv run python -c "from src.adapters import ADAPTER_MAP; print('trek_redbarn' in ADAPTER_MAP)"
+uv run pytest tests/test_adapters/test_trek_redbarn.py -v
+```
+
+**Dependencies:**
+- T001
+
+---
+
+### Phase 3: CLI Integration
+
+#### Task T005: Update CLI for Bike Search Profile
+
+**Priority:** High
+
+**Files:**
+- `src/cli.py` (update)
+- `src/bike_search.py` (new)
+
+**Description:**
+Update CLI to support bike search profile using bike_config.yaml and BikeRelevanceScorer.
+
+**Steps:**
+1. Create BikeSearchOrchestrator in bike_search.py (extends SearchOrchestrator pattern)
+2. Add --profile option to CLI (ring|bike, default: ring)
+3. Profile determines: config file, scorer, adapters
+4. Update help text with bike search examples
+5. Ensure backward compatibility (ring search unchanged)
+
+**Acceptance Criteria:**
+- [ ] `uv run ring-search -c bike_config.yaml run` works
+- [ ] BikeSearchOrchestrator uses BikeRelevanceScorer
+- [ ] Existing ring search behavior unchanged
+- [ ] CLI help shows bike search usage
+
+**Verification:**
+```bash
+uv run ring-search --help
+uv run ring-search -c bike_config.yaml run --dry-run
+```
+
+**Dependencies:**
+- T002, T003, T004
+
+---
+
+### Phase 4: Testing & Quality
+
+#### Task T006: Integration Tests
+
+**Priority:** High
+
+**Files:**
+- `tests/test_bike_integration.py` (new)
+
+**Description:**
+End-to-end integration tests for bike search workflow.
+
+**Steps:**
+1. Create fixtures for mock bike listings
+2. Test full search flow with BikeSearchOrchestrator
+3. Test scoring of various bike listings
+4. Test report generation with bike results
+5. Test dedup behavior
+
+**Acceptance Criteria:**
+- [ ] Integration test covers full search flow
+- [ ] Mock adapters return realistic bike data
+- [ ] Scoring correctly ranks listings
+- [ ] Report includes all expected fields
+
+**Verification:**
+```bash
+uv run pytest tests/test_bike_integration.py -v
+```
+
+**Dependencies:**
+- T005
+
+---
+
+#### Task T007: Quality Gates
+
+**Priority:** High
+
+**Files:**
+- All new files
+
+**Description:**
+Ensure code quality standards are met.
+
+**Steps:**
+1. Run ruff linting and fix issues
+2. Run mypy type checking and fix issues
+3. Verify test coverage ≥80%
+4. Update docstrings where needed
+
+**Acceptance Criteria:**
+- [ ] `uv run ruff check src/` passes
+- [ ] `uv run mypy src/` passes
+- [ ] Test coverage ≥80% for new code
+- [ ] No type errors
+
+**Verification:**
+```bash
+uv run ruff check src/ tests/
+uv run ruff format --check src/ tests/
+uv run mypy src/
 uv run pytest --cov=src --cov-fail-under=80
 ```
 
 **Dependencies:**
-- impl_001, impl_002, impl_003, impl_004
+- T006
 
 ---
 
-#### Task test_002: Integration Tests
+### Phase 5: Documentation
 
-**Estimated Time:** [Duration]
-**Priority:** High
+#### Task T008: Update Documentation
 
-**Files:**
-- `tests/integration/test_*.py`
-
-**Description:**
-End-to-end integration tests with real database.
-
-**Steps:**
-1. Set up test database fixtures
-2. Test API workflows end-to-end
-3. Test error scenarios
-4. Test concurrent requests
-
-**Verification:**
-```bash
-uv run pytest tests/integration/ -v
-```
-
-**Dependencies:**
-- impl_004, test_001
-
----
-
-### Phase 5: Containerization
-
-#### Task container_001: Application Container
-
-**Estimated Time:** [Duration]
 **Priority:** Medium
 
 **Files:**
-- `Containerfile`
-- `.containerignore`
+- `CLAUDE.md` (update)
+- `README.md` (update if exists)
 
 **Description:**
-Create optimized container for application.
+Update documentation to reflect bike search capability.
 
 **Steps:**
-1. Write multi-stage Containerfile
-2. Optimize layer caching
-3. Add health check
-4. Test container build and run
+1. Add bike search examples to CLAUDE.md Development Commands
+2. Document bike_config.yaml structure
+3. Add bike scoring weights explanation
+4. Update architecture diagram if needed
+
+**Acceptance Criteria:**
+- [ ] CLAUDE.md includes bike search commands
+- [ ] Configuration options documented
+- [ ] Scoring logic explained
 
 **Verification:**
 ```bash
-podman build -t bike-search:latest .
-podman run --rm -p 8000:8000 bike-search:latest
-curl http://localhost:8000/health
+# Manual review of documentation
+cat CLAUDE.md | grep -A5 "bike"
 ```
 
 **Dependencies:**
-- All implementation tasks complete
+- T007
 
 ---
-
-#### Task container_002: Container Orchestration
-
-**Estimated Time:** [Duration]
-**Priority:** Medium
-
-**Files:**
-- `podman-compose.yml`
-- `.env.example`
-
-**Description:**
-Set up multi-container orchestration.
-
-**Steps:**
-1. Define services in podman-compose.yml
-2. Configure volumes and networks
-3. Set up environment variables
-4. Add health checks
-5. Test full stack
-
-**Verification:**
-```bash
-podman-compose up -d
-podman-compose ps
-curl http://localhost:8000/health
-podman-compose logs app
-podman-compose down
-```
-
-**Dependencies:**
-- container_001
-
----
-
-## Estimated Total Time
-
-| Phase | Duration |
-|-------|----------|
-| Phase 1: Foundation | [X hours] |
-| Phase 2: Core Implementation | [X hours] |
-| Phase 3: API Layer | [X hours] |
-| Phase 4: Testing | [X hours] |
-| Phase 5: Containerization | [X hours] |
-| **Total** | **[X hours]** |
 
 ## Task Dependencies Graph
 
 ```
-impl_001 ─┐
-          ├─> impl_003 ─> impl_004 ─┐
-impl_002 ─┘                          ├─> test_001 ─> test_002 ─> container_001 ─> container_002
-                                     │
-                                     └─> test_001
+T001 (Config/Models)
+  │
+  ├─> T002 (Bike Scoring) ─┐
+  │                         │
+  ├─> T003 (Pinkbike) ─────┼─> T005 (CLI) ─> T006 (Integration) ─> T007 (Quality) ─> T008 (Docs)
+  │                         │
+  └─> T004 (Trek RedBarn) ─┘
 ```
-
-## Critical Path
-
-1. impl_001
-2. impl_002
-3. impl_003
-4. impl_004
-5. test_001
-6. test_002
-7. container_001
-8. container_002
-
-[Identify which tasks are on the critical path and cannot be parallelized]
 
 ## Parallel Work Opportunities
 
-- impl_001 and impl_002 can be done in parallel
-- test_001 unit tests can be written alongside implementation
-- Documentation can be written in parallel with containerization
+- T002, T003, T004 can be done in parallel after T001
+- Tests can be written alongside each implementation task
+
+## Critical Path
+
+1. T001 → T002 → T005 → T006 → T007 → T008
 
 ## Quality Checklist
 
 Before considering this feature complete:
 
-- [ ] All tasks marked as complete
-- [ ] Test coverage ≥ 80%
-- [ ] All tests passing (unit + integration)
+- [ ] All 8 tasks marked complete
+- [ ] Test coverage ≥ 80% for new code
+- [ ] All tests passing
 - [ ] Linting clean (`uv run ruff check src/ tests/`)
 - [ ] Type checking clean (`uv run mypy src/`)
-- [ ] Container builds successfully
-- [ ] Container health checks passing
-- [ ] API documentation complete
-- [ ] Code reviewed
-- [ ] Manual testing performed
+- [ ] bike_config.yaml validated
+- [ ] Documentation updated
+- [ ] Manual test: `uv run ring-search -c bike_config.yaml run --dry-run`
 
 ## Risk Assessment
 
 ### High Risk Tasks
 
-- **impl_003**: Core business logic is complex
-  - Mitigation: Break into smaller subtasks, pair programming
-
-- **test_002**: Integration tests may be flaky
-  - Mitigation: Use proper fixtures, isolated test database
+- **T003/T004 (Adapters)**: Website structure may change or require authentication
+  - Mitigation: Use adaptive discovery as fallback
 
 ### Medium Risk Tasks
 
-- **container_002**: Multi-container networking can be tricky
-  - Mitigation: Test thoroughly in local environment first
+- **T002 (Scoring)**: Model/class distinction may be ambiguous in listings
+  - Mitigation: Conservative scoring, flag uncertain matches for manual review
 
 ## Notes
 
-[Any additional notes, considerations, or context for implementation]
-
 ### Implementation Tips
 
-- [Tip 1]
-- [Tip 2]
-- [Tip 3]
+- Reuse existing patterns from ring-search adapters
+- BikeRelevanceScorer should follow same interface as RelevanceScorer
+- Test with real listing data where possible
 
-### Common Pitfalls
+### Key Model Numbers
 
-- [Pitfall 1 and how to avoid it]
-- [Pitfall 2 and how to avoid it]
+- Trek Allant+ 7S (Class 3): Target model
+- Trek Allant+ 7 (Class 1): REJECT - wrong class
+- 625Wh battery: Required
+- 500Wh battery: Insufficient
+- Range Extender (second battery): Bonus
 
 ### Resources
 
-- [Link to relevant documentation]
-- [Link to example code]
-- [Link to design patterns]
+- [Trek Allant+ 7S Product Page](https://www.trekbikes.com/us/en_US/bikes/hybrid-bikes/electric-hybrid-bikes/allant/allant-7s/p/35026/)
+- [Pinkbike Buy/Sell](https://www.pinkbike.com/buysell/)
+- [Trek Red Barn Refresh](https://www.trekbikes.com/us/en_US/certified-preowned/)
