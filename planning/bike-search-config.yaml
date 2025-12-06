@@ -1,0 +1,162 @@
+analyst:
+  problem_statement: |
+    Users need to find a specific used Trek Allant+ 7S electric bike with precise specifications
+    (625Wh battery, range extender, Class 3, Large frame) across multiple online marketplaces.
+    Manual searching is time-consuming and listings may be missed.
+
+  primary_users: |
+    E-bike buyers in Indianapolis area looking for Trek Allant+ 7S with specific requirements
+    (Class 3 speed, 625Wh battery, range extender, Large frame)
+
+  success_criteria: |
+    - Daily automated searches run without manual intervention
+    - All matching listings within 300mi radius are discovered
+    - Class 1 models are correctly rejected (zero false positives)
+    - 625Wh + range extender requirements are validated
+    - User receives actionable report with verified listings
+
+  functional_requirements:
+    - name: Marketplace Search
+      description: Search multiple online marketplaces for Trek Allant+ 7S listings
+      priority: High
+      acceptance_criteria:
+        - Searches eBay, Craigslist, Pinkbike, Trek Red Barn Refresh
+        - Uses adaptive discovery for Facebook Marketplace, OfferUp, Mercari
+        - Supports location-based filtering (300mi radius from Indianapolis)
+
+    - name: Model Validation
+      description: Validate listings match Trek Allant+ 7S specifications
+      priority: High
+      acceptance_criteria:
+        - Rejects Allant+ 7 (Class 1, 20 mph) models
+        - Confirms Allant+ 7S (Class 3, 28 mph) model
+        - Validates Large (L) frame size when available
+
+    - name: Battery Validation
+      description: Verify battery meets minimum requirements
+      priority: High
+      acceptance_criteria:
+        - Confirms 625Wh primary battery (rejects 500Wh)
+        - Checks for range extender (second battery)
+        - Flags partial matches (625Wh without range extender)
+
+    - name: Relevance Scoring
+      description: Score listings based on specification match
+      priority: Medium
+      acceptance_criteria:
+        - Model match weighted 40%
+        - Class 3 confirmation weighted 20%
+        - Battery 625Wh weighted 20%
+        - Range extender weighted 15%
+        - Frame size weighted 5%
+
+    - name: Report Generation
+      description: Generate summary report of matching listings
+      priority: Medium
+      acceptance_criteria:
+        - Markdown format with summary table
+        - Detailed listing information
+        - Screenshots of high-scoring listings
+        - Sorted by relevance score
+
+  performance_requirements: Search completes within 30 minutes for all marketplaces
+
+  security_requirements: none
+
+  scalability_requirements: Not critical - single user, daily batch operation
+
+  constraints: |
+    - Some platforms may block automated access (Facebook Marketplace)
+    - Battery specifications not always explicitly listed
+    - Rate limits on marketplace APIs/websites
+    - Frame size may require manual verification
+
+  assumptions: |
+    - Playwright and browser automation infrastructure available
+    - Internet connectivity for marketplace access
+    - Existing ring-search codebase provides reusable components
+
+architect:
+  web_framework: None
+  database: None
+  migration_strategy: None
+  testing_framework: pytest
+  use_containerization: false
+  container_strategy: None
+  architecture_pattern: Modular
+  error_handling: |
+    - Per-adapter error isolation (one failing adapter doesn't stop others)
+    - Retry with exponential backoff for transient failures
+    - Graceful degradation if marketplace unavailable
+  logging_approach: |
+    - JSON structured logging for machine parsing
+    - Markdown summary reports for human review
+    - Log rotation and retention policy
+  deployment_target: Local machine with scheduled execution via launchd
+
+  system_overview: |
+    The bike-search system extends the existing ring-search architecture to search for
+    Trek Allant+ 7S e-bikes. It uses the same SearchOrchestrator pattern with specialized
+    BikeRelevanceScorer and bike-specific validation logic.
+
+  components:
+    - name: BikeSearchOrchestrator
+      purpose: Coordinates search across marketplaces with bike-specific configuration
+      interfaces: [BikeMarketplaceAdapter, BikeRelevanceScorer, DedupManager, SearchLogger]
+
+    - name: BikeRelevanceScorer
+      purpose: Scores listings based on Trek Allant+ 7S specifications
+      interfaces: [BikeValidationRules]
+      details: |
+        Scoring weights:
+        - Model match (Allant+ 7S): 40%
+        - Class 3 (28 mph): 20%
+        - Battery 625Wh: 20%
+        - Range extender: 15%
+        - Frame size Large: 5%
+
+    - name: BikeValidationRules
+      purpose: Validates listings against mandatory requirements
+      interfaces: []
+      details: |
+        Must reject:
+        - Allant+ 7 (non-S) models
+        - 500Wh battery only
+        - Class 1 (20 mph) bikes
+        Partial match:
+        - 625Wh without range extender
+
+    - name: BikeMarketplaceAdapter
+      purpose: Abstract interface for bike marketplace searches
+      interfaces: [search, get_listing_details]
+      details: Implementations for eBay, Craigslist, Pinkbike, Trek Red Barn, Facebook Marketplace
+
+  data_flow: |
+    1. BikeSearchOrchestrator loads configuration
+    2. For each enabled marketplace:
+       a. BikeMarketplaceAdapter.search() returns listing URLs
+       b. DedupManager filters seen URLs
+       c. BikeMarketplaceAdapter.get_listing_details() extracts details
+       d. BikeValidationRules validates mandatory requirements
+       e. BikeRelevanceScorer assigns relevance score
+       f. ScreenshotCapture captures high-scoring listings
+    3. SearchLogger generates markdown summary
+
+  tech_stack:
+    - Python 3.11+
+    - Playwright (browser automation)
+    - Click (CLI)
+    - YAML (configuration)
+    - Existing ring-search infrastructure
+
+  integration_points:
+    - Reuse existing adapters where applicable (eBay, Craigslist, Mercari)
+    - Add Pinkbike adapter (bike-specific)
+    - Add Trek Red Barn Refresh adapter (manufacturer pre-owned)
+    - Extend discovery module for bike-specific search queries
+
+  risks:
+    - Facebook Marketplace may block automated access
+    - Trek Red Barn Refresh may have limited inventory
+    - Battery specifications may not be explicitly listed
+    - Price volatility in used e-bike market
