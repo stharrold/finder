@@ -38,7 +38,12 @@ def run_search(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        orchestrator = SearchOrchestrator(config_path)
+        adaptive = getattr(args, "adaptive", False)
+        orchestrator = SearchOrchestrator(config_path, adaptive=adaptive)
+
+        if adaptive:
+            print("Running in ADAPTIVE mode - will discover listings from search engines")
+
         stats = asyncio.run(orchestrator.run_daily_search(headless=not args.headed))
 
         print("\n" + "=" * 50)
@@ -207,6 +212,11 @@ Examples:
         "--headed",
         action="store_true",
         help="Run browser in headed mode (visible)",
+    )
+    run_parser.add_argument(
+        "--adaptive",
+        action="store_true",
+        help="Enable adaptive search discovery (find listings via search engines)",
     )
     run_parser.set_defaults(func=run_search)
 

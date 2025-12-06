@@ -129,18 +129,14 @@ class MercariAdapter(MarketplaceAdapter):
             await page.wait_for_timeout(2000)
 
             # Extract title
-            title_element = await page.query_selector(
-                "[data-testid='ItemName'], h1, .item-name"
-            )
+            title_element = await page.query_selector("[data-testid='ItemName'], h1, .item-name")
             title = ""
             if title_element:
                 title = await title_element.text_content() or ""
                 title = title.strip()
 
             # Extract price
-            price_element = await page.query_selector(
-                "[data-testid='ItemPrice'], .item-price"
-            )
+            price_element = await page.query_selector("[data-testid='ItemPrice'], .item-price")
             price = None
             if price_element:
                 price = await price_element.text_content()
@@ -148,9 +144,7 @@ class MercariAdapter(MarketplaceAdapter):
                     price = price.strip()
 
             # Extract description
-            desc_element = await page.query_selector(
-                "[data-testid='ItemDescription'], .item-description"
-            )
+            desc_element = await page.query_selector("[data-testid='ItemDescription'], .item-description")
             description = None
             if desc_element:
                 description = await desc_element.text_content()
@@ -158,9 +152,7 @@ class MercariAdapter(MarketplaceAdapter):
                     description = description.strip()[:500]
 
             # Extract image
-            image_element = await page.query_selector(
-                "[data-testid='ItemImage'] img, .item-photo img"
-            )
+            image_element = await page.query_selector("[data-testid='ItemImage'] img, .item-photo img")
             image_url = None
             if image_element:
                 image_url = await image_element.get_attribute("src")

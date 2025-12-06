@@ -1,5 +1,6 @@
 """Poshmark marketplace adapter."""
 
+import asyncio
 import logging
 from typing import AsyncIterator
 from urllib.parse import quote_plus
@@ -11,6 +12,10 @@ from src.adapters.base import MarketplaceAdapter
 from src.models import Listing
 
 logger = logging.getLogger(__name__)
+
+# Retry configuration
+MAX_RETRIES = 3
+RETRY_BASE_DELAY = 1.0  # seconds
 
 
 class PoshmarkAdapter(MarketplaceAdapter):
@@ -62,118 +67,153 @@ class PoshmarkAdapter(MarketplaceAdapter):
                 logger.error(f"Error searching Poshmark: {e}")
 
     async def _extract_listings(self, page: Page) -> AsyncIterator[Listing]:
-        """Extract listings from current page."""
+        """Extract listings from current page using batch JavaScript extraction.
+
+        Uses page.evaluate() to extract all listing data in a single JS call,
+        avoiding stale element handle errors from DOM changes during iteration.
+        """
         try:
             await page.wait_for_selector(self.SELECTORS["listing"], timeout=10000)
         except PlaywrightTimeout:
             logger.warning("No listings found on page")
             return
 
-        listing_elements = await page.query_selector_all(self.SELECTORS["listing"])
+        # Extract all listings in a single JavaScript call to avoid stale handles
+        listings_data = await page.evaluate(
+            """
+            (selectors) => {
+                const results = [];
+                const listings = document.querySelectorAll(selectors.listing);
 
-        for element in listing_elements:
+                listings.forEach(element => {
+                    try {
+                        // Extract link
+                        let linkElement = element.querySelector(selectors.link);
+                        if (!linkElement) {
+                            linkElement = element.querySelector('a');
+                        }
+                        if (!linkElement) return;
+
+                        const href = linkElement.getAttribute('href');
+                        if (!href || !href.includes('/listing/')) return;
+
+                        // Extract title
+                        const titleElement = element.querySelector(selectors.title);
+                        const title = titleElement ? titleElement.textContent.trim() : '';
+
+                        // Extract price
+                        const priceElement = element.querySelector(selectors.price);
+                        const price = priceElement ? priceElement.textContent.trim() : null;
+
+                        // Extract image URL
+                        const imageElement = element.querySelector(selectors.image);
+                        const imageUrl = imageElement ? imageElement.getAttribute('src') : null;
+
+                        results.push({
+                            href: href,
+                            title: title,
+                            price: price,
+                            imageUrl: imageUrl
+                        });
+                    } catch (e) {
+                        // Skip problematic elements
+                    }
+                });
+
+                return results;
+            }
+            """,
+            self.SELECTORS,
+        )
+
+        for data in listings_data:
             try:
-                # Extract link
-                link_element = await element.query_selector(self.SELECTORS["link"])
-                if not link_element:
-                    link_element = await element.query_selector("a")
-                if not link_element:
-                    continue
-
-                href = await link_element.get_attribute("href")
-                if not href or "/listing/" not in href:
-                    continue
-
+                href = data.get("href", "")
                 url = href if href.startswith("http") else f"{self.BASE_URL}{href}"
-
-                # Extract title
-                title_element = await element.query_selector(self.SELECTORS["title"])
-                title = ""
-                if title_element:
-                    title = await title_element.text_content() or ""
-                    title = title.strip()
-
-                # Extract price
-                price_element = await element.query_selector(self.SELECTORS["price"])
-                price = None
-                if price_element:
-                    price = await price_element.text_content()
-                    if price:
-                        price = price.strip()
-
-                # Extract image URL
-                image_element = await element.query_selector(self.SELECTORS["image"])
-                image_url = None
-                if image_element:
-                    image_url = await image_element.get_attribute("src")
 
                 yield Listing(
                     url=url,
                     source=self.NAME,
-                    title=title,
-                    price=price,
+                    title=data.get("title", ""),
+                    price=data.get("price"),
                     description=None,
-                    image_url=image_url,
+                    image_url=data.get("imageUrl"),
                 )
-
             except Exception as e:
-                logger.warning(f"Error extracting listing: {e}")
+                logger.warning(f"Error processing listing data: {e}")
 
     async def get_listing_details(self, page: Page, url: str) -> Listing | None:
-        """Get detailed information for a specific listing."""
-        try:
-            await page.goto(url, wait_until="domcontentloaded")
-            await self._rate_limit()
+        """Get detailed information for a specific listing with retry logic.
 
-            # Wait for dynamic content
-            await page.wait_for_timeout(2000)
+        Uses page.evaluate() for batch extraction and exponential backoff
+        for transient failures.
+        """
+        last_error: Exception | None = None
 
-            # Extract title
-            title_element = await page.query_selector(
-                ".listing__title, h1[data-et-name='title']"
-            )
-            title = ""
-            if title_element:
-                title = await title_element.text_content() or ""
-                title = title.strip()
+        for attempt in range(MAX_RETRIES):
+            try:
+                await page.goto(url, wait_until="domcontentloaded")
+                await self._rate_limit()
 
-            # Extract price
-            price_element = await page.query_selector(
-                ".listing__price, [data-et-name='price']"
-            )
-            price = None
-            if price_element:
-                price = await price_element.text_content()
-                if price:
-                    price = price.strip()
+                # Wait for dynamic content
+                await page.wait_for_timeout(2000)
 
-            # Extract description
-            desc_element = await page.query_selector(
-                ".listing__description, [data-et-name='description']"
-            )
-            description = None
-            if desc_element:
-                description = await desc_element.text_content()
-                if description:
-                    description = description.strip()[:500]
+                # Extract all details in a single JavaScript call
+                details = await page.evaluate(
+                    """
+                    () => {
+                        const titleEl = document.querySelector(
+                            '.listing__title, h1[data-et-name="title"]'
+                        );
+                        const priceEl = document.querySelector(
+                            '.listing__price, [data-et-name="price"]'
+                        );
+                        const descEl = document.querySelector(
+                            '.listing__description, [data-et-name="description"]'
+                        );
+                        const imageEl = document.querySelector(
+                            '.listing__image img, .carousel img'
+                        );
 
-            # Extract image
-            image_element = await page.query_selector(
-                ".listing__image img, .carousel img"
-            )
-            image_url = None
-            if image_element:
-                image_url = await image_element.get_attribute("src")
+                        return {
+                            title: titleEl ? titleEl.textContent.trim() : '',
+                            price: priceEl ? priceEl.textContent.trim() : null,
+                            description: descEl
+                                ? descEl.textContent.trim().substring(0, 500)
+                                : null,
+                            imageUrl: imageEl ? imageEl.getAttribute('src') : null
+                        };
+                    }
+                    """
+                )
 
-            return Listing(
-                url=url,
-                source=self.NAME,
-                title=title,
-                price=price,
-                description=description,
-                image_url=image_url,
-            )
+                return Listing(
+                    url=url,
+                    source=self.NAME,
+                    title=details.get("title", ""),
+                    price=details.get("price"),
+                    description=details.get("description"),
+                    image_url=details.get("imageUrl"),
+                )
 
-        except Exception as e:
-            logger.error(f"Error fetching Poshmark listing details: {e}")
-            return None
+            except PlaywrightTimeout as e:
+                last_error = e
+                if attempt < MAX_RETRIES - 1:
+                    delay = RETRY_BASE_DELAY * (2**attempt)
+                    logger.warning(
+                        f"Timeout fetching Poshmark details (attempt {attempt + 1}/{MAX_RETRIES}), "
+                        f"retrying in {delay:.1f}s: {url}"
+                    )
+                    await asyncio.sleep(delay)
+            except Exception as e:
+                last_error = e
+                if attempt < MAX_RETRIES - 1:
+                    delay = RETRY_BASE_DELAY * (2**attempt)
+                    logger.warning(
+                        f"Error fetching Poshmark details (attempt {attempt + 1}/{MAX_RETRIES}), "
+                        f"retrying in {delay:.1f}s: {e}"
+                    )
+                    await asyncio.sleep(delay)
+
+        logger.error(f"Failed to fetch Poshmark listing after {MAX_RETRIES} attempts: {last_error}")
+        return None

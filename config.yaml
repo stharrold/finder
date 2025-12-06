@@ -104,6 +104,21 @@ rate_limiting:
   min_delay_seconds: 2
   max_delay_seconds: 5
 
+# Adaptive search discovery (optional - enhances standard marketplace searches)
+# When enabled, uses search engines to discover listings on any marketplace
+discovery:
+  enabled: false  # Set to true to enable adaptive search
+  providers:
+    - duckduckgo  # No API key needed, privacy-friendly
+    # - google    # May require handling CAPTCHAs
+  rate_limit_delay: 3.0  # Seconds between search requests
+  max_results_per_query: 20
+  include_unknown_domains: false  # Include results from non-marketplace sites
+  # Site filters to restrict searches (optional)
+  # site_filters:
+  #   - "site:facebook.com/marketplace"
+  #   - "site:offerup.com"
+
 # Output configuration
 output:
   base_dir: "output"

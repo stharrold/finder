@@ -9,6 +9,17 @@ from src.adapters.poshmark import PoshmarkAdapter
 from src.adapters.rubylane import RubyLaneAdapter
 from src.adapters.shopgoodwill import ShopGoodwillAdapter
 
+# Map adapter names to classes (used by LegacyAdapterBridge)
+ADAPTER_MAP: dict[str, type[MarketplaceAdapter]] = {
+    "shopgoodwill": ShopGoodwillAdapter,
+    "ebay": EbayAdapter,
+    "etsy": EtsyAdapter,
+    "craigslist": CraigslistAdapter,
+    "rubylane": RubyLaneAdapter,
+    "mercari": MercariAdapter,
+    "poshmark": PoshmarkAdapter,
+}
+
 __all__ = [
     "MarketplaceAdapter",
     "ShopGoodwillAdapter",
@@ -18,4 +29,5 @@ __all__ = [
     "RubyLaneAdapter",
     "MercariAdapter",
     "PoshmarkAdapter",
+    "ADAPTER_MAP",
 ]

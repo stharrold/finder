@@ -18,6 +18,7 @@ uv run playwright install chromium
 # Run CLI (note: global options before subcommand)
 uv run ring-search -c config.yaml run              # Daily search
 uv run ring-search -c config.yaml run --headed     # With visible browser
+uv run ring-search -c config.yaml run --adaptive   # With adaptive discovery
 uv run ring-search -c config.yaml check-urls urls.txt  # Check specific URLs
 uv run ring-search report                          # View most recent summary
 
@@ -40,13 +41,22 @@ SearchOrchestrator (src/ring_search.py)
 ├── MarketplaceAdapter (src/adapters/base.py) - Abstract interface
 │   ├── ShopGoodwillAdapter, EbayAdapter, EtsyAdapter, CraigslistAdapter
 │   ├── RubyLaneAdapter, MercariAdapter, PoshmarkAdapter
+├── SearchDiscovery (src/discovery/base.py) - Search engine discovery [NEW]
+│   ├── GoogleDiscovery, DuckDuckGoDiscovery
+│   └── MarketplaceFilter - URL filtering and prioritization
+├── AdaptiveExtractor (src/extractors/base.py) - Universal listing extraction [NEW]
+│   ├── StructuredDataExtractor - JSON-LD, OpenGraph, microdata
+│   ├── LegacyAdapterBridge - Routes to existing adapters
+│   └── GenericListingExtractor - Heuristic fallback
 ├── RelevanceScorer (src/scoring.py) - Configurable weights for ring attributes
 ├── ScreenshotCapture (src/capture.py) - Full-page screenshots via Playwright
 ├── DedupManager (src/dedup.py) - Persistent URL tracking
 └── SearchLogger (src/logger.py) - JSON logs and markdown summaries
 ```
 
-**Adding a new marketplace**: Subclass `MarketplaceAdapter`, implement `search()` and `get_listing_details()`, register in `src/adapters/__init__.py` and add to `ADAPTER_MAP` in `SearchOrchestrator`.
+**Adding a new marketplace**: Subclass `MarketplaceAdapter`, implement `search()` and `get_listing_details()`, register in `src/adapters/__init__.py` and add to `ADAPTER_MAP`.
+
+**Adaptive mode**: Enable with `--adaptive` flag or set `discovery.enabled: true` in config.yaml. Discovers listings via search engines and extracts data using structured markup or heuristics.
 
 ## Data Directory Structure
 
