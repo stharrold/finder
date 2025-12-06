@@ -62,3 +62,29 @@ class ScoringWeights:
     era_victorian: int = 10
     size_exact: int = 10  # Size 7
     size_close: int = 5  # Size 6-8
+
+
+@dataclass
+class BikeScoringWeights:
+    """Configurable scoring weights for Trek Allant+ 7S matching criteria.
+
+    Weights based on requirements:
+    - Model match: 40%
+    - Class 3 confirmation: 20%
+    - 625Wh battery: 20%
+    - Range extender: 15%
+    - Frame size: 5%
+    """
+
+    # Positive scoring
+    model_allant_7s: int = 40  # Exact model match
+    model_allant_plus: int = 20  # Allant+ but not specific 7S
+    class_3: int = 20  # Class 3 / 28 mph confirmed
+    battery_625wh: int = 20  # 625Wh battery
+    range_extender: int = 15  # Has range extender / second battery
+    frame_large: int = 5  # Large (L) frame size
+
+    # Negative scoring (penalties)
+    class_1_penalty: int = -50  # Class 1 / 20 mph - wrong model
+    battery_500wh_penalty: int = -20  # 500Wh - insufficient capacity
+    model_allant_7_penalty: int = -40  # Allant+ 7 (not 7S) - wrong model

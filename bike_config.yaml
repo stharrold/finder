@@ -1,0 +1,130 @@
+# Bike Search Automation Configuration
+# Target: Trek Allant+ 7S Electric Bike
+
+# Target bike details for reference
+target_bike:
+  name: "Trek Allant+ 7S"
+  model_year: "2023-2024"  # Most recent model years
+  class: 3  # Class 3 = 28 mph pedal assist
+  battery: "625Wh"
+  range_extender: true  # Second battery required
+  frame_size: "Large"
+  color: "any"  # Not filtering by color
+  search_radius_miles: 300
+  search_center: "Indianapolis, IN"
+
+# Marketplaces to search
+marketplaces:
+  - name: ebay
+    enabled: true
+    priority: 1
+    searches:
+      - "Trek Allant+ 7S"
+      - "Trek Allant 7S electric bike"
+      - "Trek Allant+ 7S 625Wh"
+      - "Trek Allant Plus 7S Class 3"
+
+  - name: craigslist
+    enabled: true
+    priority: 2
+    # Regions within approximately 300 miles of Indianapolis
+    regions:
+      # Indiana
+      - indianapolis
+      - bloomington
+      - fortwayne
+      - muncie
+      - tippecanoe  # Lafayette
+      - southbend
+      - terrehaute
+      - evansville
+      # Ohio
+      - cincinnati
+      - dayton
+      - columbus
+      - toledo
+      - cleveland
+      # Kentucky
+      - louisville
+      - lexington
+      # Illinois
+      - chicago
+      - chambana  # Champaign-Urbana
+      - peoria
+      # Michigan
+      - detroit
+      - grandrapids
+      # Missouri
+      - stlouis
+      # Tennessee
+      - nashville
+    searches:
+      - "Trek Allant"
+      - "electric bike Trek"
+      - "e-bike Trek Class 3"
+
+  - name: pinkbike
+    enabled: true
+    priority: 3
+    searches:
+      - "Trek Allant+ 7S"
+      - "Trek Allant electric"
+    location_filter:
+      center: "Indianapolis, IN"
+      radius_km: 483  # ~300 miles
+
+  - name: trek_redbarn
+    enabled: true
+    priority: 4
+    searches:
+      - "Allant+ 7S"
+      - "Allant 7S"
+    filters:
+      category: "e-bikes"
+      model_family: "Allant"
+
+# Known leads to check first (add specific URLs here when found)
+known_leads: []
+
+# Scoring configuration
+scoring:
+  thresholds:
+    high: 70
+    medium: 40
+  weights:
+    # Positive scoring
+    model_allant_7s: 40  # Exact model match (40%)
+    model_allant_plus: 20  # Generic Allant+ mention
+    class_3: 20  # Class 3 / 28 mph (20%)
+    battery_625wh: 20  # 625Wh battery (20%)
+    range_extender: 15  # Has range extender (15%)
+    frame_large: 5  # Large frame (5%)
+    # Penalties
+    class_1_penalty: -50  # Class 1 = wrong model
+    battery_500wh_penalty: -20  # 500Wh = insufficient
+    model_allant_7_penalty: -40  # Allant+ 7 (not 7S) = wrong
+
+# Rate limiting
+rate_limiting:
+  min_delay_seconds: 2
+  max_delay_seconds: 5
+
+# Adaptive search discovery
+discovery:
+  enabled: true
+  providers:
+    - duckduckgo
+  rate_limit_delay: 3.0
+  max_results_per_query: 20
+  include_unknown_domains: true
+  site_filters:
+    - "site:facebook.com/marketplace"
+    - "site:offerup.com"
+    - "site:mercari.com"
+
+# Output configuration
+output:
+  base_dir: "output"
+  screenshot_format: "png"
+  logs_dir: "logs"
+  screenshots_dir: "screenshots"

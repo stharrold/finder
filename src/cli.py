@@ -6,7 +6,7 @@ import logging
 import sys
 from pathlib import Path
 
-from src.ring_search import SearchOrchestrator
+from src.bike_search import create_orchestrator
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -39,7 +39,8 @@ def run_search(args: argparse.Namespace) -> int:
 
     try:
         adaptive = getattr(args, "adaptive", False)
-        orchestrator = SearchOrchestrator(config_path, adaptive=adaptive)
+        # Use factory to create appropriate orchestrator (ring or bike)
+        orchestrator = create_orchestrator(config_path, adaptive=adaptive)
 
         if adaptive:
             print("Running in ADAPTIVE mode - will discover listings from search engines")
@@ -109,7 +110,7 @@ def check_urls(args: argparse.Namespace) -> int:
 
         print(f"Checking {len(urls)} URLs...")
 
-        orchestrator = SearchOrchestrator(config_path)
+        orchestrator = create_orchestrator(config_path)
         stats = asyncio.run(orchestrator.check_specific_urls(urls, headless=not args.headed))
 
         print("\n" + "=" * 50)
@@ -143,7 +144,7 @@ def show_report(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        orchestrator = SearchOrchestrator(config_path)
+        orchestrator = create_orchestrator(config_path)
 
         # Find summary file
         output_dir = Path(orchestrator.config.get("output", {}).get("base_dir", "output"))
@@ -178,12 +179,22 @@ def main() -> int:
         Exit code.
     """
     parser = argparse.ArgumentParser(
-        description="Ring Search Automation - Find lost antique ring across marketplaces",
+        description="Marketplace Search Automation - Find items across online marketplaces",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  ring-search run --config config.yaml
-  ring-search check-urls urls.txt --config config.yaml
+  # Ring search (default config)
+  ring-search -c config.yaml run
+  ring-search -c config.yaml run --adaptive
+
+  # Bike search (Trek Allant+ 7S)
+  ring-search -c bike_config.yaml run
+  ring-search -c bike_config.yaml run --headed
+
+  # Check specific URLs
+  ring-search -c config.yaml check-urls urls.txt
+
+  # View report
   ring-search report --date 2024-11-30
         """,
     )
