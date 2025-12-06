@@ -1,19 +1,12 @@
----
-type: claude-context
-directory: .
-purpose: Ring search automation for locating lost antique ring across marketplaces
-parent: null
-sibling_readme: README.md
-children: []
----
-
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Repository Purpose
 
-Automated daily search across online marketplaces (ShopGoodwill, eBay, Etsy, Craigslist) to locate a lost antique ring. Captures screenshots of promising matches, maintains deduplicated URL tracking, and generates daily summary reports.
+Automated daily search across online marketplaces (ShopGoodwill, eBay, Etsy, Craigslist, Ruby Lane, Mercari, Poshmark) to locate a lost antique ring. Captures screenshots of promising matches, maintains deduplicated URL tracking, and generates daily summary reports.
+
+**Configuration**: Edit `config.yaml` to customize search keywords, scoring weights, and marketplace priorities.
 
 ## Development Commands
 
