@@ -40,15 +40,62 @@ marketplaces:
   - name: craigslist
     enabled: true
     priority: 4
+    # Regions within approximately 300 miles of Indianapolis (some slightly beyond)
     regions:
+      # Indiana
       - indianapolis
       - bloomington
       - fortwayne
-      - louisville
+      - muncie
+      - tippecanoe  # Lafayette
+      - southbend
+      - terrehaute
+      - evansville
+      # Ohio
       - cincinnati
+      - dayton
+      - columbus
+      - toledo
+      - cleveland
+      # Kentucky
+      - louisville
+      - lexington
+      # Illinois
+      - chicago
+      - chambana  # Champaign-Urbana
+      - peoria
+      # Michigan
+      - detroit
+      - grandrapids
+      # Missouri
+      - stlouis
+      # Tennessee
+      - nashville
     searches:
       - "amethyst ring"
       - "pearl ring gold"
+
+  - name: rubylane
+    enabled: true
+    priority: 5
+    searches:
+      - "amethyst pearl ring"
+      - "Victorian amethyst ring"
+      - "antique gold amethyst ring"
+
+  - name: mercari
+    enabled: true
+    priority: 6
+    searches:
+      - "amethyst pearl ring vintage"
+      - "antique amethyst ring gold"
+
+  - name: poshmark
+    enabled: true
+    priority: 7
+    searches:
+      - "amethyst pearl ring"
+      - "vintage amethyst gold ring"
 
 # Known leads to check first
 known_leads:
@@ -81,6 +128,23 @@ scoring:
 rate_limiting:
   min_delay_seconds: 2
   max_delay_seconds: 5
+
+# Adaptive search discovery uses search engines (Google/DuckDuckGo) to find marketplace
+# listings beyond the configured marketplace adapters. This enables discovery of listings
+# on any marketplace, including those not directly supported (e.g., Facebook, OfferUp, etc.).
+discovery:
+  enabled: true  # Adaptive search via search engines
+  providers:
+    - duckduckgo  # No API key needed, privacy-friendly
+    # - google    # May require handling CAPTCHAs
+  rate_limit_delay: 3.0  # Seconds between search requests
+  max_results_per_query: 20
+  include_unknown_domains: true  # Include results from any marketplace
+  # Site filters for additional marketplaces (searched in addition to configured adapters)
+  site_filters:
+    - "site:facebook.com/marketplace"
+    - "site:offerup.com"
+    - "site:nextdoor.com"
 
 # Output configuration
 output:

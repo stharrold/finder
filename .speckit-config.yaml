@@ -1,0 +1,20 @@
+# Non-interactive config for SpecKit
+# For bike-search feature
+
+with_bmad:
+  # Database migrations - None needed per architecture.md
+  migration_strategy: "None needed"
+
+  # Testing options
+  include_e2e_tests: false
+  include_performance_tests: false
+  include_security_tests: false
+
+  # Task granularity
+  task_granularity: "Small tasks (1-2 hours each)"
+
+  # Follow epic order from epics.md
+  follow_epic_order: true
+
+  # Additional notes
+  additional_notes: "Extend existing ring-search adapters for bike search. Reuse scoring, dedup, and reporting infrastructure."

@@ -469,7 +469,7 @@ class TestCLIIntegration:
             headed=False,
         )
 
-        with patch("src.cli.SearchOrchestrator") as mock_orch:
+        with patch("src.cli.create_orchestrator") as mock_factory:
             mock_instance = MagicMock()
             mock_instance.run_daily_search = AsyncMock(
                 return_value={
@@ -480,12 +480,12 @@ class TestCLIIntegration:
                     "sources": ["shopgoodwill", "ebay"],
                 }
             )
-            mock_orch.return_value = mock_instance
+            mock_factory.return_value = mock_instance
 
             result = run_search(args)
 
         assert result == 0
-        mock_orch.assert_called_once_with(e2e_config)
+        mock_factory.assert_called_once_with(e2e_config, adaptive=False)
 
     def test_cli_handles_orchestrator_error(self, e2e_config: Path) -> None:
         """Test that CLI handles orchestrator errors gracefully."""
@@ -498,10 +498,10 @@ class TestCLIIntegration:
             headed=False,
         )
 
-        with patch("src.cli.SearchOrchestrator") as mock_orch:
+        with patch("src.cli.create_orchestrator") as mock_factory:
             mock_instance = MagicMock()
             mock_instance.run_daily_search = AsyncMock(side_effect=Exception("Search failed"))
-            mock_orch.return_value = mock_instance
+            mock_factory.return_value = mock_instance
 
             result = run_search(args)
 

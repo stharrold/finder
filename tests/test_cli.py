@@ -26,7 +26,7 @@ class TestCLI:
             assert exc.value.code == 0
 
         captured = capsys.readouterr()
-        assert "Ring Search Automation" in captured.out
+        assert "Marketplace Search Automation" in captured.out
         assert "run" in captured.out
         assert "check-urls" in captured.out
 
@@ -95,7 +95,7 @@ output:
             headed=False,
         )
 
-        with patch("src.cli.SearchOrchestrator") as mock_orch:
+        with patch("src.cli.create_orchestrator") as mock_factory:
             mock_instance = MagicMock()
             mock_instance.run_daily_search = AsyncMock(
                 return_value={
@@ -106,7 +106,7 @@ output:
                     "sources": ["shopgoodwill"],
                 }
             )
-            mock_orch.return_value = mock_instance
+            mock_factory.return_value = mock_instance
 
             result = run_search(args)
 
@@ -155,7 +155,7 @@ output:
             headed=False,
         )
 
-        with patch("src.cli.SearchOrchestrator") as mock_orch:
+        with patch("src.cli.create_orchestrator") as mock_factory:
             mock_instance = MagicMock()
             mock_instance.check_specific_urls = AsyncMock(
                 return_value={
@@ -166,7 +166,7 @@ output:
                     "sources": ["unknown"],
                 }
             )
-            mock_orch.return_value = mock_instance
+            mock_factory.return_value = mock_instance
 
             result = check_urls(args)
 
@@ -185,7 +185,7 @@ output:
             headed=False,
         )
 
-        with patch("src.cli.SearchOrchestrator") as mock_orch:
+        with patch("src.cli.create_orchestrator") as mock_factory:
             mock_instance = MagicMock()
             mock_instance.check_specific_urls = AsyncMock(
                 return_value={
@@ -196,7 +196,7 @@ output:
                     "sources": [],
                 }
             )
-            mock_orch.return_value = mock_instance
+            mock_factory.return_value = mock_instance
 
             result = check_urls(args)
 
@@ -214,10 +214,10 @@ output:
             date=None,
         )
 
-        with patch("src.cli.SearchOrchestrator") as mock_orch:
+        with patch("src.cli.create_orchestrator") as mock_factory:
             mock_instance = MagicMock()
             mock_instance.config = {"output": {"base_dir": str(tmp_path), "logs_dir": "logs"}}
-            mock_orch.return_value = mock_instance
+            mock_factory.return_value = mock_instance
 
             # Create empty logs dir
             (tmp_path / "logs").mkdir()
@@ -235,10 +235,10 @@ output:
             date="2024-11-30",
         )
 
-        with patch("src.cli.SearchOrchestrator") as mock_orch:
+        with patch("src.cli.create_orchestrator") as mock_factory:
             mock_instance = MagicMock()
             mock_instance.config = {"output": {"base_dir": str(tmp_path), "logs_dir": "logs"}}
-            mock_orch.return_value = mock_instance
+            mock_factory.return_value = mock_instance
 
             # Create summary file
             logs_dir = tmp_path / "logs"
@@ -259,10 +259,10 @@ output:
             date=None,
         )
 
-        with patch("src.cli.SearchOrchestrator") as mock_orch:
+        with patch("src.cli.create_orchestrator") as mock_factory:
             mock_instance = MagicMock()
             mock_instance.config = {"output": {"base_dir": str(tmp_path), "logs_dir": "logs"}}
-            mock_orch.return_value = mock_instance
+            mock_factory.return_value = mock_instance
 
             # Create multiple summary files
             logs_dir = tmp_path / "logs"
