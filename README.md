@@ -5,11 +5,10 @@ Automated daily search across online marketplaces to locate specific items. Supp
 ## Search Profiles
 
 - **Ring Search** (`config.yaml`): Lost antique ring - 10K yellow gold with amethyst and seed pearls
-- **Bike Search** (`bike_config.yaml`): Trek Allant+ 7S e-bike - Class 3, 625Wh battery, range extender, Large frame
 
 ## Features
 
-- **Multi-Marketplace Search**: ShopGoodwill, eBay, Etsy, Craigslist, Poshmark, Mercari, Ruby Lane, Pinkbike, Trek Red Barn
+- **Multi-Marketplace Search**: ShopGoodwill, eBay, Etsy, Craigslist, Poshmark, Mercari, Ruby Lane
 - **Adaptive Discovery**: Search engine discovery via DuckDuckGo for any marketplace
 - **Relevance Scoring**: Configurable weights per search profile
 - **Screenshot Capture**: Full-page screenshots of promising matches
@@ -36,10 +35,6 @@ uv run ring-search -c config.yaml run
 uv run ring-search -c config.yaml run --headed     # Visible browser
 uv run ring-search -c config.yaml run --adaptive   # With adaptive discovery
 
-# Bike search (Trek Allant+ 7S)
-uv run ring-search -c bike_config.yaml run
-uv run ring-search -c bike_config.yaml run --headed
-
 # Check specific URLs
 uv run ring-search -c config.yaml check-urls urls.txt
 
@@ -49,7 +44,7 @@ uv run ring-search report
 
 ## Configuration
 
-Edit `config.yaml` (ring) or `bike_config.yaml` (bike) to customize:
+Edit `config.yaml` to customize:
 - Marketplace priorities and search keywords
 - Scoring weights for relevance calculation
 - Output directories and rate limiting

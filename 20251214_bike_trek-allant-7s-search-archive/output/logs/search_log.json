@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2025-12-06T16:47:31.078430",
+    "url": "https://www.trekbikes.com/us/en_US/pre-owned-bikes/pre-owned-electric-bikes/",
+    "source": "known_lead",
+    "title": "Not Found",
+    "price": null,
+    "confidence_score": 0,
+    "confidence": "low",
+    "matched_factors": [],
+    "screenshot": null,
+    "status": "new"
+  },
+  {
+    "timestamp": "2025-12-07T08:08:39.158301",
+    "url": "https://www.bicyclebluebook.com/listing/2021-trek-allant+-7s-94618/",
+    "source": "known_lead",
+    "title": "BicycleBlueBook",
+    "price": null,
+    "confidence_score": 0,
+    "confidence": "low",
+    "matched_factors": [],
+    "screenshot": null,
+    "status": "new"
+  }
+]

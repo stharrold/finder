@@ -4,17 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-Automated daily search across online marketplaces to locate specific items. Supports multiple search profiles:
+Automated daily search across online marketplaces to locate specific items.
 
 **Ring Search** (config.yaml): Lost antique ring ("The Giulia Ring" - 10K yellow gold with amethyst and seed pearls, size 7, lost in Indianapolis).
 
-**Bike Search** (bike_config.yaml): Trek Allant+ 7S electric bike (Class 3, 625Wh battery, range extender, Large frame, within 300mi of Indianapolis).
-
 **Search Coverage**:
-- **Fixed Adapters**: ShopGoodwill, eBay, Etsy, Craigslist (24 regions/300mi), Ruby Lane, Mercari, Poshmark, Pinkbike, Trek Red Barn Refresh
+- **Fixed Adapters**: ShopGoodwill, eBay, Etsy, Craigslist (24 regions/300mi), Ruby Lane, Mercari, Poshmark
 - **Adaptive Discovery**: Any marketplace via DuckDuckGo + Facebook Marketplace, OfferUp, Nextdoor
 
-**Configuration**: Edit `config.yaml` (ring) or `bike_config.yaml` (bike) to customize search keywords, scoring weights, marketplace priorities, and discovery settings.
+**Configuration**: Edit `config.yaml` to customize search keywords, scoring weights, marketplace priorities, and discovery settings.
+
+**Archived Searches**:
+- `20251214_bike_trek-allant-7s-search-archive/` - Trek Allant+ 7S bike search (cancelled 2025-12-14, no matches found)
 
 ## Development Commands
 
@@ -24,14 +25,9 @@ uv sync --extra dev
 uv run playwright install chromium
 
 # Run CLI (note: global options before subcommand)
-# Ring search
 uv run ring-search -c config.yaml run              # Daily ring search
 uv run ring-search -c config.yaml run --headed     # With visible browser
 uv run ring-search -c config.yaml run --adaptive   # With adaptive discovery
-
-# Bike search (Trek Allant+ 7S)
-uv run ring-search -c bike_config.yaml run         # Daily bike search
-uv run ring-search -c bike_config.yaml run --headed  # With visible browser
 
 # Common commands
 uv run ring-search -c config.yaml check-urls urls.txt  # Check specific URLs
@@ -53,11 +49,9 @@ uv run mypy src/                 # Type check
 
 ```
 SearchOrchestrator (src/ring_search.py)        # Ring search orchestrator
-BikeSearchOrchestrator (src/bike_search.py)    # Bike search orchestrator
 ├── MarketplaceAdapter (src/adapters/base.py) - Abstract interface
 │   ├── ShopGoodwillAdapter, EbayAdapter, EtsyAdapter, CraigslistAdapter
 │   ├── RubyLaneAdapter, MercariAdapter, PoshmarkAdapter
-│   ├── PinkbikeAdapter, TrekRedBarnAdapter    # Bike-specific adapters
 ├── SearchDiscovery (src/discovery/base.py) - Search engine discovery
 │   ├── GoogleDiscovery, DuckDuckGoDiscovery
 │   └── MarketplaceFilter - URL filtering and prioritization
@@ -66,7 +60,6 @@ BikeSearchOrchestrator (src/bike_search.py)    # Bike search orchestrator
 │   ├── LegacyAdapterBridge - Routes to existing adapters
 │   └── GenericListingExtractor - Heuristic fallback
 ├── RelevanceScorer (src/scoring.py) - Configurable weights for ring attributes
-├── BikeRelevanceScorer (src/bike_scoring.py) - Bike-specific scoring
 ├── ScreenshotCapture (src/capture.py) - Full-page screenshots via Playwright
 ├── DedupManager (src/dedup.py) - Persistent URL tracking
 └── SearchLogger (src/logger.py) - JSON logs and markdown summaries
@@ -75,15 +68,6 @@ BikeSearchOrchestrator (src/bike_search.py)    # Bike search orchestrator
 **Adding a new marketplace**: Subclass `MarketplaceAdapter`, implement `search()` and `get_listing_details()`, register in `src/adapters/__init__.py` and add to `ADAPTER_MAP`.
 
 **Adaptive mode**: Enable with `--adaptive` flag or set `discovery.enabled: true` in config.yaml. Discovers listings via search engines and extracts data using structured markup or heuristics.
-
-**Bike scoring weights** (from bike_config.yaml):
-- Model match (Allant+ 7S): 40%
-- Class 3 confirmation: 20%
-- 625Wh battery: 20%
-- Range extender: 15%
-- Large frame: 5%
-
-**Orchestrator selection**: The CLI uses `create_orchestrator()` in `src/bike_search.py` which auto-detects whether to use `SearchOrchestrator` (ring) or `BikeSearchOrchestrator` (bike) based on `search_type` in the config file.
 
 ## Workflow Commands
 
@@ -144,10 +128,11 @@ All changes flow: `contrib/<user>` → `develop` → `main`
 
 ## Scheduled Automation
 
-Daily search runs at 8:00 AM via macOS LaunchAgent:
+Daily ring search runs at 8:00 AM via macOS LaunchAgent:
 - **Plist**: `~/Library/LaunchAgents/com.stharrold.ring-search.plist`
 - **Logs**: `output/logs/launchd.log`
 - **Manual trigger**: `launchctl kickstart gui/$(id -u)/com.stharrold.ring-search`
+- **Reload after changes**: `launchctl unload ~/Library/LaunchAgents/com.stharrold.ring-search.plist && launchctl load ~/Library/LaunchAgents/com.stharrold.ring-search.plist`
 
 ## Critical Guidelines
 
