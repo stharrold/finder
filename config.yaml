@@ -148,7 +148,7 @@ discovery:
 
 # Output configuration
 output:
-  base_dir: "output"
+  base_dir: "20251201_ring_vintage-amethyst-pearl-gold/output"
   screenshot_format: "png"
   logs_dir: "logs"
   screenshots_dir: "screenshots"

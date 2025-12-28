@@ -130,7 +130,7 @@ All changes flow: `contrib/<user>` → `develop` → `main`
 
 Daily ring search runs at 8:00 AM via macOS LaunchAgent:
 - **Plist**: `~/Library/LaunchAgents/com.stharrold.ring-search.plist`
-- **Logs**: `output/logs/launchd.log`
+- **Logs**: `20251201_ring_vintage-amethyst-pearl-gold/output/logs/launchd.log`
 - **Manual trigger**: `launchctl kickstart gui/$(id -u)/com.stharrold.ring-search`
 - **Reload after changes**: `launchctl unload ~/Library/LaunchAgents/com.stharrold.ring-search.plist && launchctl load ~/Library/LaunchAgents/com.stharrold.ring-search.plist`
 
