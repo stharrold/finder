@@ -6,13 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Automated daily search across online marketplaces to locate specific items.
 
-**Ring Search** (config.yaml): Lost antique ring ("The Giulia Ring" - 10K yellow gold with amethyst and seed pearls, size 7, lost in Indianapolis).
+**Active Searches**:
+- **Giulia Ring** (`config.yaml`): Lost antique ring - 10K yellow gold with amethyst and seed pearls, size 7, lost in Indianapolis
+- **Sapphire Ring** (`20260101_ring_modern-saphire-diamond-platinum/config.yaml`): Upgrade search - platinum with sapphire and diamond, size 7
 
 **Search Coverage**:
 - **Fixed Adapters**: ShopGoodwill, eBay, Etsy, Craigslist (24 regions/300mi), Ruby Lane, Mercari, Poshmark
 - **Adaptive Discovery**: Any marketplace via DuckDuckGo + Facebook Marketplace, OfferUp, Nextdoor
 
-**Configuration**: Edit `config.yaml` to customize search keywords, scoring weights, marketplace priorities, and discovery settings.
+**Configuration**: Each search has its own config.yaml with search keywords, scoring weights, marketplace priorities, and discovery settings.
 
 **Archived Searches**:
 - `20251214_bike_trek-allant-7s-search-archive/` - Trek Allant+ 7S bike search (cancelled 2025-12-14, no matches found)
@@ -128,11 +130,20 @@ All changes flow: `contrib/<user>` → `develop` → `main`
 
 ## Scheduled Automation
 
-Daily ring search runs at 8:00 AM via macOS LaunchAgent:
+Daily ring searches run via macOS LaunchAgents:
+
+**Giulia Ring** (8:00 AM):
 - **Plist**: `~/Library/LaunchAgents/com.stharrold.ring-search.plist`
 - **Logs**: `20251201_ring_vintage-amethyst-pearl-gold/output/logs/launchd.log`
 - **Manual trigger**: `launchctl kickstart gui/$(id -u)/com.stharrold.ring-search`
-- **Reload after changes**: `launchctl unload ~/Library/LaunchAgents/com.stharrold.ring-search.plist && launchctl load ~/Library/LaunchAgents/com.stharrold.ring-search.plist`
+
+**Sapphire Ring** (9:00 AM):
+- **Plist**: `~/Library/LaunchAgents/com.stharrold.ring-search-sapphire.plist`
+- **Logs**: `20260101_ring_modern-saphire-diamond-platinum/output/logs/launchd.log`
+- **Manual trigger**: `launchctl kickstart gui/$(id -u)/com.stharrold.ring-search-sapphire`
+
+**Common operations**:
+- **Reload after changes**: `launchctl unload <plist> && launchctl load <plist>`
 
 ## Critical Guidelines
 

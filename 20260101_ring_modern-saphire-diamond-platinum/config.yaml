@@ -1,0 +1,140 @@
+# Ring Search Automation Configuration
+# Modern Sapphire/Diamond/Platinum Ring - Upgrade Search
+
+# Target ring details for reference
+target_ring:
+  name: "Modern Sapphire Diamond Platinum Ring"
+  metal: "Platinum"
+  stones:
+    - "Sapphire"
+    - "Diamond"
+  size: 7
+  search_type: "upgrade"  # Looking for similar style, not lost item
+  target_region: "Indianapolis, IN"
+
+# Marketplaces to search
+marketplaces:
+  - name: shopgoodwill
+    enabled: true
+    priority: 1
+    searches:
+      - "sapphire diamond ring platinum"
+      - "platinum sapphire ring"
+      - "blue sapphire diamond ring"
+
+  - name: ebay
+    enabled: true
+    priority: 2
+    searches:
+      - "sapphire diamond platinum ring"
+      - "platinum sapphire engagement ring"
+      - "blue sapphire diamond ring platinum"
+
+  - name: etsy
+    enabled: true
+    priority: 3
+    searches:
+      - "sapphire diamond platinum ring"
+      - "platinum sapphire ring"
+
+  - name: craigslist
+    enabled: true
+    priority: 4
+    # Regions within approximately 300 miles of Indianapolis
+    regions:
+      # Indiana
+      - indianapolis
+      - bloomington
+      - fortwayne
+      - muncie
+      - tippecanoe
+      - southbend
+      - terrehaute
+      - evansville
+      # Ohio
+      - cincinnati
+      - dayton
+      - columbus
+      - toledo
+      - cleveland
+      # Kentucky
+      - louisville
+      - lexington
+      # Illinois
+      - chicago
+      - chambana
+      - peoria
+      # Michigan
+      - detroit
+      - grandrapids
+      # Missouri
+      - stlouis
+      # Tennessee
+      - nashville
+    searches:
+      - "sapphire ring"
+      - "diamond platinum ring"
+
+  - name: rubylane
+    enabled: true
+    priority: 5
+    searches:
+      - "sapphire diamond ring"
+      - "platinum sapphire ring"
+
+  - name: mercari
+    enabled: true
+    priority: 6
+    searches:
+      - "sapphire diamond ring platinum"
+      - "platinum sapphire ring"
+
+  - name: poshmark
+    enabled: true
+    priority: 7
+    searches:
+      - "sapphire diamond ring"
+      - "platinum sapphire ring"
+
+# Known leads to check first
+known_leads: []
+
+# Scoring configuration
+scoring:
+  thresholds:
+    high: 70
+    medium: 40
+  weights:
+    metal_platinum: 25
+    stone_sapphire: 25
+    stone_blue: 15
+    stone_diamond: 20
+    design_modern: 10
+    design_contemporary: 5
+    size_exact: 10
+    size_close: 5
+
+# Rate limiting
+rate_limiting:
+  min_delay_seconds: 2
+  max_delay_seconds: 5
+
+# Adaptive search discovery
+discovery:
+  enabled: true
+  providers:
+    - duckduckgo
+  rate_limit_delay: 3.0
+  max_results_per_query: 20
+  include_unknown_domains: true
+  site_filters:
+    - "site:facebook.com/marketplace"
+    - "site:offerup.com"
+    - "site:nextdoor.com"
+
+# Output configuration
+output:
+  base_dir: "20260101_ring_modern-saphire-diamond-platinum/output"
+  screenshot_format: "png"
+  logs_dir: "logs"
+  screenshots_dir: "screenshots"
