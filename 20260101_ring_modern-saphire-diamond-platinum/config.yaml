@@ -3,8 +3,10 @@
 
 # Target ring details for reference
 target_ring:
-  name: "Modern Sapphire Diamond Platinum Ring"
-  metal: "Platinum"
+  name: "Modern Sapphire Diamond Ring"
+  metal:
+    - "Platinum"
+    - "White Gold"
   stones:
     - "Sapphire"
     - "Diamond"
@@ -19,7 +21,7 @@ marketplaces:
     priority: 1
     searches:
       - "sapphire diamond ring platinum"
-      - "platinum sapphire ring"
+      - "sapphire diamond ring white gold"
       - "blue sapphire diamond ring"
 
   - name: ebay
@@ -27,15 +29,15 @@ marketplaces:
     priority: 2
     searches:
       - "sapphire diamond platinum ring"
-      - "platinum sapphire engagement ring"
-      - "blue sapphire diamond ring platinum"
+      - "sapphire diamond white gold ring"
+      - "blue sapphire diamond ring"
 
   - name: etsy
     enabled: true
     priority: 3
     searches:
       - "sapphire diamond platinum ring"
-      - "platinum sapphire ring"
+      - "sapphire diamond white gold ring"
 
   - name: craigslist
     enabled: true
@@ -72,29 +74,29 @@ marketplaces:
       # Tennessee
       - nashville
     searches:
-      - "sapphire ring"
-      - "diamond platinum ring"
+      - "sapphire diamond ring"
+      - "white gold sapphire ring"
 
   - name: rubylane
     enabled: true
     priority: 5
     searches:
       - "sapphire diamond ring"
-      - "platinum sapphire ring"
+      - "white gold sapphire ring"
 
   - name: mercari
     enabled: true
     priority: 6
     searches:
-      - "sapphire diamond ring platinum"
-      - "platinum sapphire ring"
+      - "sapphire diamond ring"
+      - "white gold sapphire ring"
 
   - name: poshmark
     enabled: true
     priority: 7
     searches:
       - "sapphire diamond ring"
-      - "platinum sapphire ring"
+      - "white gold sapphire ring"
 
 # Known leads to check first
 known_leads: []
@@ -106,6 +108,9 @@ scoring:
     medium: 40
   weights:
     metal_platinum: 25
+    metal_white_gold: 20
+    metal_14k: 10
+    metal_18k: 10
     stone_sapphire: 25
     stone_blue: 15
     stone_diamond: 20
